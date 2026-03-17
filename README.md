@@ -1,142 +1,100 @@
-# Express + Sequelize + PostgreSQL Template
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:6C63FF,100:48CAE4&height=160&section=header&text=ectyre-backend&fontSize=45&fontColor=ffffff&fontAlignY=45&desc=REST%20API%20·%20Node.js%20·%20Express%20·%20PostgreSQL&descAlignY=68&descSize=16&animation=fadeIn" alt="header"/>
 
-🚀 Plantilla base para crear APIs REST con Node.js, Express.js, Sequelize ORM y PostgreSQL.
-
-## ⚡ Instalación rápida
-
-```bash
-# Clonar la plantilla
-git clone https://github.com/jzaruma1209/create-exp-sq-paul.git mi-api
-cd mi-api
-
-# Instalar dependencias
-npm install
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tu configuración de PostgreSQL
-
-# Ejecutar en desarrollo
-npm run dev
-```
-
-## 📁 Estructura del proyecto
-
-```
-mi-api/
-├── src/
-│   ├── app.js          # Configuración de Express
-│   ├── server.js       # Servidor principal
-│   ├── routes/         # Rutas de la API
-│   │   └── index.js
-│   └── utils/          # Utilidades
-│       ├── catchError.js     # Manejo de errores async
-│       ├── connection.js     # Conexión a PostgreSQL
-│       └── errorHandler.js   # Middleware de errores
-├── .env.example        # Variables de entorno de ejemplo
-├── .gitignore
-└── package.json
-```
-
-## ⚙️ Configuración
-
-### 1. Base de datos PostgreSQL
-
-Asegúrate de tener PostgreSQL instalado y ejecutándose. Luego configura tu archivo `.env`:
-
-```env
-DATABASE_URL=postgresql://usuario:password@localhost:5432/mi_base_datos
-PORT=8080
-NODE_ENV=development
-```
-
-### 2. Variables de entorno
-
-- `DATABASE_URL`: URL completa de conexión a PostgreSQL
-- `PORT`: Puerto donde se ejecutará el servidor (por defecto: 8080)
-- `NODE_ENV`: Entorno de ejecución (development, production)
-
-## 🛠️ Scripts disponibles
-
-- `npm start` - Ejecuta el servidor en producción
-- `npm run dev` - Ejecuta con nodemon para desarrollo (recarga automática)
-
-## 🔧 Tecnologías incluidas
-
-- **Express.js 4.21** - Framework web rápido y minimalista
-- **Sequelize 6.37** - ORM para PostgreSQL con validaciones
-- **PostgreSQL** - Base de datos relacional robusta
-- **CORS** - Middleware para manejo de CORS
-- **Helmet** - Middleware de seguridad HTTP
-- **dotenv** - Carga de variables de entorno
-- **nodemon** - Recarga automática en desarrollo
-
-## 🚀 Uso básico
-
-El servidor inicia en `http://localhost:8080` con:
-
-- **Ruta principal**: `GET /` - Mensaje de bienvenida
-- **Health check**: `GET /health` - Estado del servidor
-- **Base para API**: `/api/*` - Agrega tus rutas aquí
-
-### Ejemplo de nueva ruta:
-
-```javascript
-// src/routes/users.js
-const express = require("express");
-const router = express.Router();
-
-router.get("/", (req, res) => {
-  res.json({ message: "Lista de usuarios" });
-});
-
-router.post("/", (req, res) => {
-  res.json({ message: "Usuario creado" });
-});
-
-module.exports = router;
-```
-
-```javascript
-// src/routes/index.js - Agregar la nueva ruta
-const usersRouter = require("./users");
-router.use("/users", usersRouter);
-```
-
-## 🔗 Características incluidas
-
-- ✅ Configuración de Express con middlewares de seguridad
-- ✅ Conexión a PostgreSQL con Sequelize
-- ✅ Manejo centralizado de errores
-- ✅ Estructura de carpetas organizada
-- ✅ Variables de entorno configuradas
-- ✅ CORS habilitado
-- ✅ Logs de errores
-- ✅ Recarga automática en desarrollo
-
-## 📝 Próximos pasos
-
-1. **Crear modelos**: Define tus modelos en `src/models/`
-2. **Agregar rutas**: Crea nuevas rutas en `src/routes/`
-3. **Middlewares**: Agrega middlewares personalizados en `src/middlewares/`
-4. **Controladores**: Organiza la lógica en `src/controllers/`
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea tu feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add: nueva característica'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia ISC - mira el archivo [LICENSE](LICENSE) para más detalles.
-
-## 🐛 Reportar problemas
-
-Si encuentras algún bug o tienes una sugerencia, por favor [abre un issue](https://github.com/jzaruma1209/create-exp-sq-paul/issues).
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Sequelize-52B0E7?style=for-the-badge&logo=sequelize&logoColor=white"/>
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white"/>
+</p>
 
 ---
 
-**¡Tu API está lista para funcionar! 🎉**
+## 📖 Descripción
+
+**Ectyre Backend** es la API REST del marketplace de llantas y servicios automotrices **Ectyre**. Construida con una arquitectura modular y escalable, provee todos los endpoints necesarios para gestionar usuarios, productos, pedidos y más.
+
+## 🏗️ Arquitectura
+
+```
+src/
+├── app.js              # Configuración central de Express
+├── server.js           # Punto de entrada del servidor
+├── routes/             # Definición de rutas de la API
+│   └── index.js        # Router principal
+└── utils/              # Utilidades compartidas
+```
+
+## ⚙️ Stack Tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| Runtime | Node.js |
+| Framework | Express.js |
+| Base de datos | PostgreSQL |
+| ORM | Sequelize + Sequelize CLI |
+| Autenticación | JSON Web Tokens (JWT) |
+| Variables de entorno | dotenv |
+
+## 🚀 Instalación y uso
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/jzaruma1209/ectyre-backend.git
+cd ectyre-backend
+```
+
+### 2. Instalar dependencias
+```bash
+npm install
+```
+
+### 3. Configurar variables de entorno
+```bash
+cp .env.example .env
+```
+Edita el archivo `.env` con tus credenciales:
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ectyre_db
+DB_USER=tu_usuario
+DB_PASS=tu_password
+JWT_SECRET=tu_clave_secreta
+PORT=3000
+```
+
+### 4. Ejecutar migraciones
+```bash
+npx sequelize-cli db:migrate
+```
+
+### 5. Iniciar el servidor
+```bash
+# Desarrollo
+npm run dev
+
+# Producción
+npm start
+```
+
+## 🔗 Endpoints principales
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/api/health` | Estado del servidor |
+| `POST` | `/api/auth/register` | Registro de usuario |
+| `POST` | `/api/auth/login` | Inicio de sesión |
+| `GET` | `/api/products` | Listar productos |
+| `POST` | `/api/products` | Crear producto (admin) |
+| `GET` | `/api/orders` | Listar pedidos |
+
+## 🤝 Contribuir
+
+Lee el [CONTRIBUTING.md](CONTRIBUTING.md) para conocer el flujo de trabajo y las convenciones del proyecto.
+
+## 📄 Licencia
+
+© 2025 Jefferson Zaruma — Todos los derechos reservados.
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:48CAE4,100:6C63FF&height=80&section=footer" alt="footer"/>

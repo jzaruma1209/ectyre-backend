@@ -1,18 +1,30 @@
-const app = require('./app');
-const sequelize = require('./utils/connection');
+const app = require("./app");
+const { connection } = require("./utils/connection");
 
 const PORT = process.env.PORT || 8080;
 
-const main = async () => {
+// Verificar si estamos en Vercel
+if (process.env.VERCEL) {
+  module.exports = app; // Para Vercel
+} else {
+  // Para desarrollo local
+  const startServer = async () => {
     try {
-        sequelize.sync();
-        console.log("DB connected");
-        app.listen(PORT);
-        console.log(`👉 Server running on port ${PORT}`);
-        console.log(`👉 Link http://localhost:${PORT}`);
-    } catch (error) {
-        console.log(error)
-    }
-}
+      // Probar conexión a la base de datos
+      await connection();
+      console.log("✅ Conexión a PostgreSQL establecida");
 
-main();
+      // Iniciar servidor
+      app.listen(PORT, () => {
+        console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+        console.log(`📍 http://localhost:${PORT}`);
+        console.log(`📚 API: http://localhost:${PORT}/api/v1`);
+      });
+    } catch (error) {
+      console.error("❌ Error al iniciar servidor:", error);
+      process.exit(1);
+    }
+  };
+
+  startServer();
+}

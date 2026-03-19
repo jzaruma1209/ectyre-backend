@@ -1,46 +1,47 @@
 {
-  "name": "express-sequelize-api-template",
+  "name": "llantas247-api",
   "version": "1.0.0",
-  "description": "Plantilla para crear APIs con Express.js, Sequelize y PostgreSQL",
+  "description": "API REST para e-commerce de llantas Llantas247 usando Node.js, Express, Sequelize y PostgreSQL",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server",
-    "dev": "nodemon src/server",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "reset:migrate": "node src/tests/testMigrate.js",
+    "pretest": "npm run reset:migrate",
     "db:create": "npx sequelize-cli db:create",
     "db:migrate": "npx sequelize-cli db:migrate",
-    "db:seed": "npx sequelize-cli db:seed:all",
-    "db:reset": "npx sequelize-cli db:drop && npx sequelize-cli db:create && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
-    "lint": "echo 'No linter configured' && exit 0",
-    "test": "echo 'No tests configured' && exit 0"
+    "db:seed": "npx sequelize-cli db:seed:all"
   },
   "keywords": [
+    "llantas",
+    "e-commerce",
+    "rest-api",
+    "nodejs",
     "express",
     "sequelize",
-    "postgresql",
-    "api",
-    "template"
+    "postgresql"
   ],
-  "author": "",
+  "author": "Llantas247 Team",
   "license": "ISC",
   "dependencies": {
-    "cors": "2.8.5",
-    "dotenv": "16.4.5",
     "express": "^4.21.2",
-    "helmet": "8.0.0",
+    "sequelize": "6.37.3",
     "pg": "8.13.0",
     "pg-hstore": "2.3.4",
-    "sequelize": "6.37.3"
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "16.4.5",
+    "cors": "2.8.5",
+    "helmet": "8.0.0",
+    "express-rate-limit": "^7.1.0",
+    "express-validator": "^7.0.0"
   },
   "devDependencies": {
-    "nodemon": "3.1.7"
+    "nodemon": "3.1.7",
+    "jest": "^30.0.0",
+    "supertest": "^7.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jzaruma1209/create-exp-sq-paul.git"
-  },
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/jzaruma1209/create-exp-sq-paul/issues"
-  },
-  "homepage": "https://github.com/jzaruma1209/create-exp-sq-paul#readme"
+  "type": "commonjs"
 }

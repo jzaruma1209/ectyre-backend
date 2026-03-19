@@ -11,7 +11,7 @@ describe("Cliente API Tests", () => {
     numeroIdentificacion: "9876543210",
     nombres: "Test",
     apellidos: "Usuario",
-    email: "test.cliente@llantas247.com",
+    email: "test.cliente@ectyre.com",
     telefono: "0981234567",
     password: "Test1234!",
   };

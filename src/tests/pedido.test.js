@@ -32,7 +32,7 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
       numeroIdentificacion: "5555555555",
       nombres: "Pedido",
       apellidos: "Test",
-      email: "pedido.test@llantas247.com",
+      email: "pedido.test@ectyre.com",
       telefono: "0977777777",
       passwordHash: "hashedPass",
       activo: true,

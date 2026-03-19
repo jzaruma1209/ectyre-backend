@@ -1,4 +1,4 @@
-# 🗺️ PLAN DE IMPLEMENTACIÓN — Llantas247 API
+# 🗺️ PLAN DE IMPLEMENTACIÓN — API Ectyre
 ## Estado actual vs. Requisitos para Producción
 
 ---
@@ -239,4 +239,4 @@
 
 ---
 
-> 🎉 **¡Proyecto completado!** Las 3 etapas están terminadas. La API Llantas247 está lista para producción.
+> 🎉 **¡Proyecto completado!** Las 3 etapas están terminadas. La API Ectyre está lista para producción.

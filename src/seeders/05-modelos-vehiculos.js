@@ -4,11 +4,11 @@
 module.exports = {
   async up(queryInterface) {
     const marcas = await queryInterface.sequelize.query(
-      "SELECT id_marca, nombre FROM marcas_vehiculos ORDER BY id_marca;",
+      "SELECT id_marca_vehiculo, nombre FROM marcas_vehiculos ORDER BY id_marca_vehiculo;",
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     );
     const idMap = {};
-    marcas.forEach((m) => { idMap[m.nombre] = m.id_marca; });
+    marcas.forEach((m) => { idMap[m.nombre] = m.id_marca_vehiculo; });
 
     await queryInterface.bulkInsert("modelos_vehiculos", [
       // Toyota

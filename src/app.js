@@ -11,7 +11,7 @@ const app = express();
 // En desarrollo acepta cualquier origen; en producción, solo el dominio del frontend
 const corsOptions = {
   origin: process.env.NODE_ENV === "production"
-    ? process.env.CORS_ORIGIN || "https://llantas247.com"
+    ? process.env.CORS_ORIGIN || "https://ectyre.com"
     : "*",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -34,7 +34,7 @@ app.use("/api/v1", router);
 app.get("/", (req, res) => {
   return res.json({
     success: true,
-    message: "Bienvenido a Llantas247 API",
+    message: "Bienvenido a API Ectyre",
     version: "1.0.0",
     environment: process.env.NODE_ENV || "development",
     endpoints: {

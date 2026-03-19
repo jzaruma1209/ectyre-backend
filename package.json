@@ -1,7 +1,7 @@
 {
-  "name": "llantas247-api",
+  "name": "apiectyre",
   "version": "1.0.0",
-  "description": "API REST para e-commerce de llantas Llantas247 usando Node.js, Express, Sequelize y PostgreSQL",
+  "description": "API REST para el ecosistema Ectyre (E-commerce y Servicios) usando Node.js, Express, Sequelize y PostgreSQL",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -23,7 +23,7 @@
     "sequelize",
     "postgresql"
   ],
-  "author": "Llantas247 Team",
+  "author": "Ectyre Team",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",

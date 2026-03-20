@@ -1,6 +1,8 @@
 const clienteService = require("../services/cliente.services");
 const catchError = require("../utils/catchError");
 const { clearLoginAttempts } = require("../middlewares/rateLimit.middleware");
+const { blacklistToken } = require("../middlewares/auth.middleware");
+
 
 // Registro de cliente
 const registrarCliente = catchError(async (req, res) => {
@@ -51,9 +53,26 @@ const updatePerfilCliente = catchError(async (req, res) => {
   });
 });
 
+// Logout (invalidar token)
+const logoutCliente = catchError(async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(" ")[1];
+    blacklistToken(token);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Sesión cerrada correctamente",
+  });
+});
+
 module.exports = {
   registrarCliente,
   loginCliente,
+  logoutCliente,
   getPerfilCliente,
   updatePerfilCliente,
 };
+
+

@@ -12,7 +12,13 @@
     "pretest": "npm run reset:migrate",
     "db:create": "npx sequelize-cli db:create",
     "db:migrate": "npx sequelize-cli db:migrate",
-    "db:seed": "npx sequelize-cli db:seed:all"
+    "db:seed": "npx sequelize-cli db:seed:all",
+    "db:migrate:prod": "NODE_ENV=production npx sequelize-cli db:migrate",
+    "db:seed:prod": "NODE_ENV=production npx sequelize-cli db:seed:all",
+    "prestart": "npm run db:migrate"
+  },
+  "engines": {
+    "node": ">=20.x"
   },
   "keywords": [
     "llantas",

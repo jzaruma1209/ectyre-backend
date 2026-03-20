@@ -1,6 +1,16 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const { sequelize } = require("../models");
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, { logging: false })
+/**
+ * Función para verificar la conexión a la base de datos
+ * Se exporta como objeto { connection } para ser compatible con server.js
+ */
+const connection = async () => {
+  try {
+    await sequelize.authenticate();
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
 
-module.exports = sequelize;
+module.exports = { connection };

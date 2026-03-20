@@ -11,10 +11,10 @@ const {
   validateDireccionData,
 } = require("./validation.middleware");
 const {
-  rateLimitLogin,
   rateLimitAPI,
+  rateLimitLogin,
   rateLimitStrict,
-  clearLoginAttempts,
+  rateLimitRegistro,
 } = require("./rateLimit.middleware");
 
 module.exports = {
@@ -33,8 +33,8 @@ module.exports = {
   validateDireccionData,
 
   // Rate Limiting
-  rateLimitLogin,
   rateLimitAPI,
+  rateLimitLogin,
   rateLimitStrict,
-  clearLoginAttempts,
+  rateLimitRegistro,
 };

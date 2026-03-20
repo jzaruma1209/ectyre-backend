@@ -1,5 +1,17 @@
 const jwt = require("jsonwebtoken");
 
+// ─── Blacklist de tokens (en memoria para este ejemplo) ──────────────
+// En producción, se recomienda usar Redis para persistencia y escalabilidad
+const tokenBlacklist = new Set();
+
+/**
+ * Agrega un token a la lista negra (logout)
+ */
+const blacklistToken = (token) => {
+  if (token) tokenBlacklist.add(token);
+};
+
+
 /**
  * Middleware para verificar token JWT
  * Extrae el token del header Authorization y verifica su validez
@@ -19,10 +31,11 @@ const verifyJWT = (req, res, next) => {
     // Verificar formato Bearer token
     const token = authHeader.split(" ")[1];
 
-    if (!token) {
+    // Verificar si el token está en la lista negra
+    if (tokenBlacklist.has(token)) {
       return res.status(401).json({
         success: false,
-        message: "Formato de token inválido. Use: Bearer <token>",
+        message: "Sesión cerrada. Por favor inicie sesión de nuevo.",
       });
     }
 
@@ -78,4 +91,5 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyJWT, isAdmin };
+module.exports = { verifyJWT, isAdmin, blacklistToken };
+

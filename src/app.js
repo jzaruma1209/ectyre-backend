@@ -4,28 +4,74 @@ const cors = require("cors");
 require("dotenv").config();
 const router = require("./routes");
 const errorHandler = require("./utils/errorHandler");
+const { rateLimitAPI } = require("./middlewares/rateLimit.middleware");
 
 const app = express();
 
-// ─── Configuración de CORS ──────────────────────────────────────────
-// En desarrollo acepta cualquier origen; en producción, solo el dominio del frontend
+// ─── CORS — Lista blanca de orígenes permitidos ─────────────────────
+// En desarrollo acepta cualquier origen; en producción solo dominios autorizados
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || "https://ectyre.com")
+  .split(",")
+  .map((o) => o.trim());
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === "production"
-    ? process.env.CORS_ORIGIN || "https://ectyre.com"
-    : "*",
+  origin: (origin, callback) => {
+    // En desarrollo, permitir peticiones sin origin (Postman, curl, etc.)
+    if (process.env.NODE_ENV !== "production") {
+      return callback(null, true);
+    }
+
+    // En producción: origin debe estar en la lista blanca
+    // origin puede ser undefined para peticiones server-to-server
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(
+      Object.assign(new Error("Origen no permitido por la política CORS"), {
+        statusCode: 403,
+      })
+    );
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset"],
   credentials: true,
+  maxAge: 86400, // Cache preflight 24 h
+};
+
+// ─── Helmet — Headers de seguridad HTTP ────────────────────────────
+const helmetOptions = {
+  // Content Security Policy: sólo APIs necesitan esto relajado
+  contentSecurityPolicy: false,
+  // Evitar exponer que el servidor es Express/Node
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  // Evitar iframes de dominios externos
+  frameguard: { action: "deny" },
+  // Forzar HTTPS en browsers (1 año)
+  hsts:
+    process.env.NODE_ENV === "production"
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
+  // Ocultar el header X-Powered-By
+  hidePoweredBy: true,
+  // Prevenir MIME-sniffing
+  noSniff: true,
+  // Evitar cachear respuestas en navegadores
+  noCache: false,
+  // Protección XSS filtro (legacy browsers)
+  xssFilter: true,
 };
 
 // ─── Middlewares globales ───────────────────────────────────────────
-app.use(express.json({ limit: "10mb" }));
-app.use(
-  helmet({
-    crossOriginResourcePolicy: false,
-  })
-);
+app.use(express.json({ limit: "1mb" }));       // 🔒 Reducido de 10mb → 1mb para evitar abusos
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(helmet(helmetOptions));
 app.use(cors(corsOptions));
+
+// ─── Rate limit global (antes de las rutas) ─────────────────────────
+// Aplicado a TODAS las rutas /api/v1
+app.use("/api/v1", rateLimitAPI);
 
 // ─── Rutas ─────────────────────────────────────────────────────────
 app.use("/api/v1", router);
@@ -54,11 +100,14 @@ app.get("/health", (req, res) => {
   return res.status(200).json({ success: true, status: "OK", timestamp: new Date().toISOString() });
 });
 
-// Ruta no encontrada (404)
+// Ruta no encontrada (404) — nunca exponer la ruta exacta en producción
 app.use((req, res) => {
+  const isProduction = process.env.NODE_ENV === "production";
   return res.status(404).json({
     success: false,
-    message: `Ruta no encontrada: ${req.method} ${req.originalUrl}`,
+    message: isProduction
+      ? "Recurso no encontrado"
+      : `Ruta no encontrada: ${req.method} ${req.originalUrl}`,
   });
 });
 

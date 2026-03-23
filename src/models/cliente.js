@@ -75,6 +75,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         field: "password_hash",
       },
+      role: {
+        type: DataTypes.ENUM("cliente", "admin"),
+        allowNull: false,
+        defaultValue: "cliente",
+      },
       activo: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,

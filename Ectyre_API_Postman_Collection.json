@@ -1,0 +1,846 @@
+{
+  "info": {
+    "_postman_id": "ectyre-api-v1-local-collection",
+    "name": "🛞 Ectyre API v1.0",
+    "description": "Colección completa API Ectyre — 36 endpoints en 8 módulos.\n\n**Antes de usar:** Selecciona el environment 'Ectyre API - Local' en Postman.\n\n**Flujo recomendado:**\n1. Ejecuta 'Login' → el token se guarda automáticamente en {{token}}\n2. Para rutas Admin, haz login con admin@ectyre.com y guarda en {{adminToken}}\n3. Cambia la URL en el environment si usas producción.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "description": "URL base de la API. Cambiar aquí o en el environment."
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health Check",
+      "item": [
+        {
+          "name": "Bienvenida [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": [""]
+            },
+            "description": "🌍 Público — Muestra bienvenida y lista de módulos disponibles."
+          }
+        },
+        {
+          "name": "Health Check [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["health"]
+            },
+            "description": "🌍 Público — Estado del servidor: { success, status, timestamp }"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Clientes",
+      "item": [
+        {
+          "name": "Registro [Pública]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoIdentificacion\": \"CEDULA\",\n  \"numeroIdentificacion\": \"0959401332\",\n  \"nombres\": \"Paul\",\n  \"apellidos\": \"Zaruma\",\n  \"email\": \"zpaul3984@gmail.com\",\n  \"telefono\": \"0991234567\",\n  \"password\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/clientes/registro",
+            "description": "🌍 Público — Registrar nuevo cliente. Campos: tipoIdentificacion (CEDULA|RUC|PASAPORTE), numeroIdentificacion, nombres, apellidos, email, telefono, password. Rate limit: 3/hora por IP."
+          }
+        },
+        {
+          "name": "Login Usuario [Pública]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.token) {",
+                  "  pm.environment.set('token', res.data.token);",
+                  "  console.log('✅ Token guardado en {{token}}');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"carlos.mendoza@test.com\",\n  \"password\": \"Test1234!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/clientes/login",
+            "description": "🌍 Público — Login usuario normal (Carlos). El test script guarda el token automáticamente en {{token}}. Rate limit: 5/15min."
+          }
+        },
+        {
+          "name": "Login Admin [Pública]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.token) {",
+                  "  pm.environment.set('adminToken', res.data.token);",
+                  "  console.log('✅ Admin Token guardado en {{adminToken}}');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ectyre.com\",\n  \"password\": \"Admin2026#Ectyre\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/clientes/login",
+            "description": "🌍 Público — Login admin. El test script guarda el token automáticamente en {{adminToken}}."
+          }
+        },
+        {
+          "name": "Logout [Privada]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/clientes/logout",
+            "description": "🔒 JWT — Cerrar sesión."
+          }
+        },
+        {
+          "name": "Ver Perfil [Privada]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/clientes/perfil",
+            "description": "🔒 JWT — Perfil del cliente autenticado."
+          }
+        },
+        {
+          "name": "Actualizar Perfil [Privada]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Carlos Actualizado\",\n  \"telefono\": \"0997654321\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/clientes/perfil",
+            "description": "🔒 JWT — Actualizar nombres y teléfono."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛞 Llantas",
+      "item": [
+        {
+          "name": "Listar Llantas [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/llantas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas"
+              ],
+              "query": [
+                {
+                  "key": "destacado",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "idMarca",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "ancho",
+                  "value": "205",
+                  "disabled": true
+                },
+                {
+                  "key": "perfil",
+                  "value": "55",
+                  "disabled": true
+                },
+                {
+                  "key": "rin",
+                  "value": "16",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "🌍 Público — Listar llantas. Params opcionales: destacado, idMarca, ancho, perfil, rin."
+          }
+        },
+        {
+          "name": "Buscar por Medida [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/llantas/buscar-medida?ancho=205&perfil=55&rin=16",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "buscar-medida"
+              ],
+              "query": [
+                {
+                  "key": "ancho",
+                  "value": "205"
+                },
+                {
+                  "key": "perfil",
+                  "value": "55"
+                },
+                {
+                  "key": "rin",
+                  "value": "16"
+                }
+              ]
+            },
+            "description": "🌍 Público — Buscar llantas por medida (ej: 205/55R16). Los 3 params son obligatorios."
+          }
+        },
+        {
+          "name": "Buscar por Vehículo [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/llantas/buscar-vehiculo?marca=Toyota&modelo=Corolla&anio=2020",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "buscar-vehiculo"
+              ],
+              "query": [
+                {
+                  "key": "marca",
+                  "value": "Toyota"
+                },
+                {
+                  "key": "modelo",
+                  "value": "Corolla"
+                },
+                {
+                  "key": "anio",
+                  "value": "2020"
+                }
+              ]
+            },
+            "description": "🌍 Público — Llantas compatibles con un vehículo. Params de texto: marca, modelo, anio."
+          }
+        },
+        {
+          "name": "Detalle Llanta [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/llantas/1",
+            "description": "🌍 Público — Detalle de una llanta por ID. Cambia /1 por el ID real (1-13 del seeder)."
+          }
+        },
+        {
+          "name": "Crear Llanta [Privada - Admin]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idMarca\": 1,\n  \"modelo\": \"Primacy 4\",\n  \"ancho\": 205,\n  \"perfil\": 55,\n  \"rin\": 16,\n  \"precio\": 180.50,\n  \"stock\": 20,\n  \"descripcion\": \"Llanta de alto rendimiento para turismo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/llantas",
+            "description": "👑 Admin — Crear llanta en catálogo. idMarca es integer (1=Michelin, 2=Bridgestone, etc.)."
+          }
+        },
+        {
+          "name": "Actualizar Llanta [Privada - Admin]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idMarca\": 1,\n  \"modelo\": \"Primacy 4 Plus\",\n  \"ancho\": 205,\n  \"perfil\": 55,\n  \"rin\": 16,\n  \"precio\": 195.00,\n  \"stock\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/llantas/1",
+            "description": "👑 Admin — Actualizar llanta. Cambia /1 por el ID real."
+          }
+        },
+        {
+          "name": "Eliminar Llanta [Privada - Admin]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/llantas/1",
+            "description": "👑 Admin — Eliminar llanta. Cambia /1 por el ID real."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚗 Vehículos",
+      "item": [
+        {
+          "name": "Listar Marcas [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/marcas",
+            "description": "🌍 Público — Marcas de vehículos activas."
+          }
+        },
+        {
+          "name": "Marcas con Modelos [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/marcas/completo",
+            "description": "🌍 Público — Marcas con sus modelos anidados."
+          }
+        },
+        {
+          "name": "Modelos por Marca [Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/vehiculos/marcas/1/modelos",
+            "description": "🌍 Público — Modelos de una marca. Cambia /1/ por el ID de marca (1-8)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Carrito",
+      "item": [
+        {
+          "name": "Ver Carrito [Mixta]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Opcional — Sin auth funciona como sesión anónima"
+              }
+            ],
+            "url": "{{baseUrl}}/carrito",
+            "description": "🌍/🔒 Auth opcional — Ver carrito. Con JWT usa tu cuenta; sin JWT usa sesión anónima."
+          }
+        },
+        {
+          "name": "Agregar Item [Mixta]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Opcional — Sin auth funciona como sesión anónima"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idLlanta\": 1,\n  \"cantidad\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/carrito/agregar",
+            "description": "🌍/🔒 Auth opcional — Agregar llanta al carrito. idLlanta: integer, cantidad: integer >= 1."
+          }
+        },
+        {
+          "name": "Actualizar Item [Mixta]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Opcional — Sin auth funciona como sesión anónima"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/carrito/actualizar/1",
+            "description": "🌍/🔒 Auth opcional — Actualizar cantidad. Cambia /1 por el ID del item en el carrito."
+          }
+        },
+        {
+          "name": "Eliminar Item [Mixta]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Opcional — Sin auth funciona como sesión anónima"
+              }
+            ],
+            "url": "{{baseUrl}}/carrito/eliminar/1",
+            "description": "🌍/🔒 Auth opcional — Eliminar item del carrito. Cambia /1 por el ID del item."
+          }
+        },
+        {
+          "name": "Vaciar Carrito [Mixta]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Opcional — Sin auth funciona como sesión anónima"
+              }
+            ],
+            "url": "{{baseUrl}}/carrito/vaciar",
+            "description": "🌍/🔒 Auth opcional — Vaciar todo el carrito."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Pedidos",
+      "item": [
+        {
+          "name": "Checkout [Privada]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idDireccionEntrega\": 1,\n  \"requiereInstalacion\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/pedidos/checkout",
+            "description": "🔒 JWT — Procesar compra. idDireccionEntrega: integer requerido, requiereInstalacion: boolean opcional."
+          }
+        },
+        {
+          "name": "Mis Pedidos [Privada]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/pedidos",
+            "description": "🔒 JWT — Listar todos mis pedidos."
+          }
+        },
+        {
+          "name": "Detalle Pedido [Privada]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/pedidos/1",
+            "description": "🔒 JWT — Detalle completo del pedido. Cambia /1 por el ID real."
+          }
+        },
+        {
+          "name": "Tracking Pedido [Privada]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/pedidos/1/tracking",
+            "description": "🔒 JWT — Historial de estados del pedido. Cambia /1 por el ID real."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏠 Direcciones",
+      "item": [
+        {
+          "name": "Mis Direcciones [Privada]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/direcciones",
+            "description": "🔒 JWT — Ver mis direcciones de entrega."
+          }
+        },
+        {
+          "name": "Crear Dirección [Privada]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provincia\": \"Pichincha\",\n  \"ciudad\": \"Quito\",\n  \"direccionCompleta\": \"Av. Amazonas N23-45 y Colón\",\n  \"referencia\": \"Frente al parque La Carolina\",\n  \"esPrincipal\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/direcciones",
+            "description": "🔒 JWT — Crear dirección de entrega. Campos: provincia, ciudad, direccionCompleta (requeridos), referencia, esPrincipal (opcionales)."
+          }
+        },
+        {
+          "name": "Actualizar Dirección [Privada]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provincia\": \"Pichincha\",\n  \"ciudad\": \"Quito\",\n  \"direccionCompleta\": \"Av. 10 de Agosto N12-34\",\n  \"referencia\": \"Edificio azul, piso 3\",\n  \"esPrincipal\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/direcciones/1",
+            "description": "🔒 JWT — Actualizar dirección. Cambia /1 por el ID."
+          }
+        },
+        {
+          "name": "Eliminar Dirección [Privada]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/direcciones/1",
+            "description": "🔒 JWT — Eliminar dirección. Cambia /1 por el ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👑 Admin",
+      "item": [
+        {
+          "name": "Dashboard [Privada - Admin]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/dashboard",
+            "description": "👑 Admin — Métricas generales del sistema."
+          }
+        },
+        {
+          "name": "Listar Clientes [Privada - Admin]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/clientes?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "👑 Admin — Listar clientes. Params: page, limit, search."
+          }
+        },
+        {
+          "name": "Detalle Cliente [Privada - Admin]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/clientes/1",
+            "description": "👑 Admin — Detalle de cliente. Cambia /1 por el ID."
+          }
+        },
+        {
+          "name": "Toggle Cliente Activo [Privada - Admin]",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/clientes/1/toggle",
+            "description": "👑 Admin — Activar/desactivar cliente. Cambia /1 por el ID."
+          }
+        },
+        {
+          "name": "Listar Pedidos Admin [Privada - Admin]",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pedidos?page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "👑 Admin — Todos los pedidos. Param opcional: estado (PENDIENTE | CONFIRMADO | EN_PREPARACION | ENVIADO | ENTREGADO | CANCELADO)."
+          }
+        },
+        {
+          "name": "Cambiar Estado Pedido [Privada - Admin]",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CONFIRMADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/admin/pedidos/1/estado",
+            "description": "👑 Admin — Cambiar estado del pedido. Valores válidos: PENDIENTE | CONFIRMADO | EN_PREPARACION | ENVIADO | ENTREGADO | CANCELADO."
+          }
+        }
+      ]
+    }
+  ]
+}

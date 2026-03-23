@@ -6,6 +6,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.0.1] — 2026-03-23
+
+### Fixed
+- 🐛 **Módulo de Login**: El JWT ahora incluye de forma correcta el campo `role` para evitar accesos denegados erróneamente con administradores y proteger las demás rutas con `isAdmin`.
+- 🐛 **Inconsistencias Endpoints**: Corrección de campos en los Requests (ej: `idLlanta`, `idDireccionEntrega`, parámetros correctos) para alinearlos con Postman y los modelos correspondientes de la BD.
+
+### Doc
+- 📝 **Documentación**: README.md refactorizado, con un overview real, stack actualizado y nueva documentación alineada entre la colección de Postman y la API REST.
+
+---
+
 ## [1.0.0] — 2026-03-20
 
 ### Added

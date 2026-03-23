@@ -57,6 +57,7 @@ class ClienteService {
         idCliente: cliente.idCliente,
         email: cliente.email,
         nombres: cliente.nombres,
+        role: cliente.role,
       },
       process.env.TOKEN_SECRET,
       { expiresIn: "7d" }

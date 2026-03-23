@@ -1,6 +1,5 @@
 const clienteService = require("../services/cliente.services");
 const catchError = require("../utils/catchError");
-const { clearLoginAttempts } = require("../middlewares/rateLimit.middleware");
 const { blacklistToken } = require("../middlewares/auth.middleware");
 
 
@@ -19,8 +18,6 @@ const registrarCliente = catchError(async (req, res) => {
 const loginCliente = catchError(async (req, res) => {
   const { email, password } = req.body;
   const resultado = await clienteService.loginCliente(email, password);
-
-  clearLoginAttempts(email);
 
   res.status(200).json({
     success: true,

@@ -1,16 +1,17 @@
 "use strict";
 
-// Hashes pre-generados con bcrypt (salt=10) para evitar dependencia de bcrypt en runtime de npx
-// Admin2026#Ectyre → $2b$10$KIp6e1P0xTqnQlrZ0sMyL.2sV3Jk5W3E4EsT7Qd5ZbFm1NpA8oVi
-// Test1234!        → $2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
-//
-// Para regenerar: node -e "require('bcrypt').hash('Admin2026#Ectyre',10).then(console.log)"
-const HASH_ADMIN = "$2b$10$KIp6e1P0xTqnQlrZ0sMyL.2sV3Jk5W3E4EsT7Qd5ZbFm1NpA8oVi";
-const HASH_TEST  = "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi";
+const bcrypt = require("bcrypt");
+
+// Contraseñas de prueba:
+// Admin:   Admin2026#Ectyre
+// Usuario: Test1234!
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
+    const HASH_ADMIN = await bcrypt.hash("Admin2026#Ectyre", 10);
+    const HASH_TEST = await bcrypt.hash("Test1234!", 10);
+
     await queryInterface.bulkInsert("clientes", [
       {
         tipo_identificacion: "CEDULA",
@@ -20,6 +21,7 @@ module.exports = {
         email: "admin@ectyre.com",
         telefono: "0999000001",
         password_hash: HASH_ADMIN,
+        role: "admin",
         activo: true,
         created_at: new Date(),
         updated_at: new Date(),
@@ -32,6 +34,7 @@ module.exports = {
         email: "carlos.mendoza@test.com",
         telefono: "0987654321",
         password_hash: HASH_TEST,
+        role: "cliente",
         activo: true,
         created_at: new Date(),
         updated_at: new Date(),
@@ -44,6 +47,7 @@ module.exports = {
         email: "maria.torres@test.com",
         telefono: "0991122334",
         password_hash: HASH_TEST,
+        role: "cliente",
         activo: true,
         created_at: new Date(),
         updated_at: new Date(),

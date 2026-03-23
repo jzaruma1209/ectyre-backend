@@ -168,8 +168,9 @@ Buscar llantas compatibles con un vehículo.
 **Query Params:**
 | Param | Tipo | Descripción |
 |-------|------|-------------|
-| `idMarca` | number | ID de la marca del vehículo |
-| `idModelo` | number | ID del modelo del vehículo |
+| `marca` | string | Nombre de la marca del vehículo |
+| `modelo` | string | Nombre del modelo del vehículo |
+| `anio` | number | Año del vehículo |
 
 ---
 

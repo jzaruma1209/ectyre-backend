@@ -2,13 +2,18 @@ const errorHandler = (error, req, res, _next) => {
   const isProduction = process.env.NODE_ENV === "production";
 
   // ─── Log interno (nunca exponer al cliente) ──────────────────────────
-  console.error("❌ [ErrorHandler]", {
-    message: error.message,
-    name: error.name,
-    stack: error.stack,
-    path: req.originalUrl,
-    method: req.method,
-  });
+  if (!isProduction) {
+    console.error("❌ [ErrorHandler]", {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      path: req.originalUrl,
+      method: req.method,
+    });
+  } else {
+    // En producción solo loguear el nombre y el path (sin stack ni datos sensibles)
+    console.error(`[ERROR] ${req.method} ${req.originalUrl} — ${error.name}: ${error.message}`);
+  }
 
   // ─── Errores de validación de Sequelize (campos inválidos) ───────────
   if (error.name === "SequelizeValidationError") {
@@ -96,9 +101,10 @@ const errorHandler = (error, req, res, _next) => {
   return res.status(status).json({
     success: false,
     message: isProduction
-      ? "Error interno del servidor - " + error.message
+      ? "Error interno del servidor"
       : error.message || "Error interno del servidor",
-    stack: error.stack, // Debug temporal en prod
+    // Stack solo en desarrollo, nunca en producción
+    ...(isProduction ? {} : { stack: error.stack }),
   });
 };
 

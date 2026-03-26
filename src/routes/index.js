@@ -10,6 +10,14 @@ const direccionRouter = require("./direccion.router");
 const adminRouter = require("./admin.router");
 const vehiculoRouter = require("./vehiculo.router");
 
+router.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Bienvenido a API Ectyre v1",
+    endpoints: ["/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/admin"]
+  });
+});
+
 // Configurar rutas
 router.use("/llantas", llantaRouter);
 router.use("/clientes", clienteRouter);

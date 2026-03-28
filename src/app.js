@@ -10,7 +10,7 @@ const app = express();
 
 // ─── CORS — Lista blanca de orígenes permitidos ─────────────────────
 // En desarrollo acepta cualquier origen; en producción solo dominios autorizados
-const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || "https://ectyre.com")
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || "https://ectyre.com,http://192.168.1.7:5173")
   .split(",")
   .map((o) => o.trim());
 

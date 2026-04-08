@@ -15,7 +15,7 @@
     "db:seed": "npx sequelize-cli db:seed:all",
     "db:migrate:prod": "NODE_ENV=production npx sequelize-cli db:migrate",
     "db:seed:prod": "NODE_ENV=production npx sequelize-cli db:seed:all",
-    "prestart": "npm run db:migrate"
+    "prestart": "node -e \"if(!process.env.VERCEL) require('child_process').execSync('npx sequelize-cli db:migrate', {stdio:'inherit'});\""
   },
   "engines": {
     "node": ">=20.x"

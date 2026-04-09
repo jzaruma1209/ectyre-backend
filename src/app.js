@@ -9,21 +9,26 @@ const { rateLimitAPI } = require("./middlewares/rateLimit.middleware");
 const app = express();
 
 // ─── CORS — Lista blanca de orígenes permitidos ─────────────────────
-// En desarrollo acepta cualquier origen; en producción solo dominios autorizados
-const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || "https://ectyre.com,http://192.168.1.7:5173")
-  .split(",")
-  .map((o) => o.trim());
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "http://192.168.1.7:5173",
+  "http://172.16.0.1:5173",
+  "https://ectyre.com"  // Origen de producción original
+];
+
+if (process.env.CORS_ORIGIN) {
+  process.env.CORS_ORIGIN.split(",").forEach(o => ALLOWED_ORIGINS.push(o.trim()));
+}
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // En desarrollo, permitir peticiones sin origin (Postman, curl, etc.)
-    if (process.env.NODE_ENV !== "production") {
+    // Permitir peticiones sin origin (Postman, curl, server-to-server)
+    if (!origin) {
       return callback(null, true);
     }
-
-    // En producción: origin debe estar en la lista blanca
-    // origin puede ser undefined para peticiones server-to-server
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    
+    // Permitir si el origin está en la lista blanca explícita, o si estamos en desarrollo
+    if (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV !== "production") {
       return callback(null, true);
     }
 
@@ -34,7 +39,8 @@ const corsOptions = {
     );
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  // Se agregaron más cabeceras comúnmente necesarias para peticiones preflight (incluyendo "Accept", "X-Requested-With", "Origin", y dejando Content-Type y Authorization)
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "Origin"],
   exposedHeaders: ["RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset"],
   credentials: true,
   maxAge: 86400, // Cache preflight 24 h

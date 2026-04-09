@@ -182,11 +182,12 @@ src/
 ## 📚 Documentación y Guías de Integración
 
 Para facilitar el trabajo a los desarrolladores o **Agentes de Frontend y Testing**, hemos preparado documentos maestros específicos:
-- 📖 [Documentación Técnica Detallada (API_DOCUMENTATION.md)](./API_DOCUMENTATION.md)
-- 🤝 [Guía de Integración Frontend (GUIA_INTEGRACION_FRONTEND.md)](./GUIA_INTEGRACION_FRONTEND.md) *(Especial para saber cómo mandar forms con imágenes y cómo consumir las Cards)*
+- 📖 [Documentación Técnica Genérica (API_DOCUMENTATION.md)](./API_DOCUMENTATION.md)
+- 🤝 [Guía de Integración Frontend (GUIA_INTEGRACION_FRONTEND.md)](./GUIA_INTEGRACION_FRONTEND.md) *(Especial para Cards de Llantas y Subida de Archivos/imágenes).*
+- 🔐 [Guía de Autenticación Frontend (GUIA_AUTH_FRONTEND.md)](./GUIA_AUTH_FRONTEND.md) *(Flujo de conexión exacto para formularios de Login, Registro y Perfiles).*
 
 También puedes importar la colección integral de pruebas en tu entorno:
-- 🚀 **[Colección de Postman (.json)](./Ectyre_API_Postman_Collection.json)** (Esta es la fuente definitiva de la verdad para conocer `payloads`, formatos `form-data` e integraciones).
+- 🚀 **[Colección de Postman (.json)](./Ectyre_API_Postman_Collection.json)** (Esta es la fuente definitiva de la verdad para conocer payloads, métodos e integraciones).
 
 ---
 

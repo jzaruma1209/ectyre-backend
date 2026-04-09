@@ -1,4 +1,4 @@
-# 🌐 Guía de Integración Backend-Frontend (Agentes Frontend)
++# 🌐 Guía de Integración Backend-Frontend (Agentes Frontend)
 
 Este documento está diseñado específicamente para los **Módulos Frontend** y **Agentes de IA** encargados de construir la interfaz de usuario (UI), las "Cards" de productos, y los formularios de administración del E-commerce Ectyre.
 
@@ -6,9 +6,8 @@ Este documento está diseñado específicamente para los **Módulos Frontend** y
 
 ## 📌 1. El Archivo "Postman Collection" es tu Mejor Amigo
 En la raíz del backend existe el archivo: **`Ectyre_API_Postman_Collection.json`**.
-- **Sincronización total:** Este archivo fue auditado y contiene **exactamente los 35 endpoints reales** implementados en el código. **No asumas ni inventes funciones que no estén ahí.**
-- **¿Por qué es vital?** Te da el **payload exacto**, los headers necesarios (ej: `form-data` vs `application/json`), y ejemplos verificados de la respuesta.
-- **Agentes Frontend:** Si tienes dudas de cómo estructurar una llamada, revisa el archivo JSON de Postman obligatoriamente.
+- **¿Por qué es útil?** Este archivo no solo lista las rutas, sino que contiene **el payload exacto**, los headers necesarios (ej: `form-data` vs `application/json`), y ejemplos reales de cómo interactuar con el backend.
+- **Agentes Frontend:** Si tienes dudas de cómo enviar un dato, revisa el archivo Postman Collection.
 
 ---
 
@@ -94,17 +93,13 @@ Internamente, el backend tomará estos datos divididos, guardará la llanta en l
 
 ## 📌 4. Resumen de Recomendaciones para Agentes Frontend
 
-1. **Autenticación en UI:** Almacena el `token` devuelto por `/api/v1/clientes/login` en el LocalStorage o en un manejador de estado global como Zustand o un Context de React. *(Nota: El inicio de sesión por Google no está activo ni conectado por ahora).*
+1. **Autenticación en UI:** Almacena el `token` devuelto por `/api/v1/clientes/login` o el callback de Google en el LocalStorage, Zustand o un contexto de React.
 2. **Formularios con Archivos:** Si el endpoint dice "Sube imágenes a Cloudinary" en la documentación de Postman, DEBES construir el request usando `form-data` y no JSON.
-3. **Manejo de Errores:** Todos los endpoints devuelven el estándar:
+3. **Manejo de Errores:** Todos los endpoints del backend devuelven un objeto de error estandarizado:
    ```json
    {
      "success": false,
-     "message": "Descripción del error..."
+     "message": "Descripción del error humano"
    }
    ```
-   Siempre saca el `message` y úsalo para lanzar notificaciones de UI (toasts).
-4. **🛑 Regla Anti-Alucinaciones:** Prohibido inventar rutas que creas que son "comunes". Te recuerdo que:
-   - No hay endpoint `/admin/reportes/...`
-   - No hay endpoint para actualizar solo el "stock" mágicamente. Modifica toda la llanta con `PUT /llantas/:id`.
-   - Limítate a lo listado en el Postman Collection.
+   Siempre lee el `message` y úsalo para lanzar notificaciones toast en la UI.

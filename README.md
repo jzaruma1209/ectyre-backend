@@ -179,6 +179,17 @@ src/
 
 ---
 
+## 📚 Documentación y Guías de Integración
+
+Para facilitar el trabajo a los desarrolladores o **Agentes de Frontend y Testing**, hemos preparado documentos maestros específicos:
+- 📖 [Documentación Técnica Detallada (API_DOCUMENTATION.md)](./API_DOCUMENTATION.md)
+- 🤝 [Guía de Integración Frontend (GUIA_INTEGRACION_FRONTEND.md)](./GUIA_INTEGRACION_FRONTEND.md) *(Especial para saber cómo mandar forms con imágenes y cómo consumir las Cards)*
+
+También puedes importar la colección integral de pruebas en tu entorno:
+- 🚀 **[Colección de Postman (.json)](./Ectyre_API_Postman_Collection.json)** (Esta es la fuente definitiva de la verdad para conocer `payloads`, formatos `form-data` e integraciones).
+
+---
+
 ## 🔗 Endpoints Principales (API v1)
 
 La base de la API está en `/api/v1`. Para consumir endpoints protegidos, se debe enviar el header: `Authorization: Bearer <TOKEN>`.

@@ -30,11 +30,23 @@ class ClienteService {
       passwordHash: data.password,
     });
 
+    // Generar token JWT igual que en login (auto-login al registrarse)
+    const token = jwt.sign(
+      {
+        idCliente: cliente.idCliente,
+        email: cliente.email,
+        nombres: cliente.nombres,
+        role: cliente.role,
+      },
+      process.env.TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
+
     // No devolver el password
     const clienteData = cliente.toJSON();
     delete clienteData.passwordHash;
 
-    return clienteData;
+    return { cliente: clienteData, token };
   }
 
   // Login

@@ -3,14 +3,14 @@ const catchError = require("../utils/catchError");
 const { blacklistToken } = require("../middlewares/auth.middleware");
 
 
-// Registro de cliente
+// Registro de cliente (incluye token para auto-login)
 const registrarCliente = catchError(async (req, res) => {
-  const cliente = await clienteService.registrarCliente(req.body);
+  const resultado = await clienteService.registrarCliente(req.body);
 
   res.status(201).json({
     success: true,
-    message: "Cliente registrado correctamente",
-    data: cliente,
+    message: "¡Cuenta creada exitosamente! Sesión iniciada.",
+    data: resultado,
   });
 });
 

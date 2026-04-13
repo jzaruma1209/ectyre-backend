@@ -74,10 +74,13 @@ class AdminService {
       });
 
       // Productos más vendidos (top 5)
+      // NOTA: subQuery:false require GROUP BY con nombres SQL reales (sequelize.col),
+      // NO paths de Sequelize como "llanta->marca.id_marca" que PostgreSQL rechaza.
+      // Además, limit dentro de include anidado es inválido con subQuery:false.
       const productosMasVendidos = await DetallePedido.findAll({
         attributes: [
-          "idLlanta",
-          [sequelize.fn("SUM", sequelize.col("cantidad")), "unidadesVendidas"],
+          [sequelize.col("DetallePedido.id_llanta"), "idLlanta"],
+          [sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "unidadesVendidas"],
           [sequelize.fn("SUM", sequelize.col("DetallePedido.subtotal")), "totalGenerado"],
         ],
         include: [
@@ -92,12 +95,12 @@ class AdminService {
                 attributes: ["idMarca", "nombre"],
               },
               {
+                // Sin limit aquí — no es compatible con GROUP BY + subQuery:false en PG
                 model: ImagenLlanta,
                 as: "imagenes",
                 where: { tipoImagen: "PRINCIPAL" },
                 required: false,
                 attributes: ["urlImagen"],
-                limit: 1,
               },
             ],
           },
@@ -108,8 +111,14 @@ class AdminService {
             attributes: [],
           },
         ],
-        group: ["idLlanta", "llanta.id_llanta", "llanta->marca.id_marca", "llanta->imagenes.id_imagen"],
-        order: [[sequelize.fn("SUM", sequelize.col("cantidad")), "DESC"]],
+        // GROUP BY con nombres de columna SQL reales que PostgreSQL entiende
+        group: [
+          sequelize.col("DetallePedido.id_llanta"),
+          sequelize.col("llanta.id_llanta"),
+          sequelize.col("llanta->marca.id_marca"),
+          sequelize.col("llanta->imagenes.id_imagen"),
+        ],
+        order: [[sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "DESC"]],
         limit: 5,
         subQuery: false,
       });
@@ -161,7 +170,18 @@ class AdminService {
         stockBajo,
       };
     } catch (error) {
-      throw new Error(`Error al obtener dashboard: ${error.message}`);
+      // Exponer el error original de Sequelize/PostgreSQL para diagnóstico en producción
+      const pgError = error.original || error;
+      console.error("[getDashboard] Error:", {
+        message: error.message,
+        pgMessage: pgError.message,
+        pgCode: pgError.code,
+        pgDetail: pgError.detail,
+        sql: error.sql || null,
+        stack: error.stack,
+      });
+      const detailedMessage = pgError.message || error.message;
+      throw new Error(`Error al obtener dashboard: ${detailedMessage}`);
     }
   }
 
@@ -518,8 +538,8 @@ class AdminService {
 
       const productos = await DetallePedido.findAll({
         attributes: [
-          "idLlanta",
-          [sequelize.fn("SUM", sequelize.col("cantidad")), "unidadesVendidas"],
+          [sequelize.col("DetallePedido.id_llanta"), "idLlanta"],
+          [sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "unidadesVendidas"],
           [sequelize.fn("SUM", sequelize.col("DetallePedido.subtotal")), "totalGenerado"],
           [sequelize.fn("COUNT", sequelize.col("DetallePedido.id_pedido")), "vecesComprado"],
         ],
@@ -531,12 +551,12 @@ class AdminService {
             include: [
               { model: MarcaLlanta, as: "marca", attributes: ["nombre"] },
               {
+                // Sin limit — incompatible con GROUP BY + subQuery:false
                 model: ImagenLlanta,
                 as: "imagenes",
                 where: { tipoImagen: "PRINCIPAL" },
                 required: false,
                 attributes: ["urlImagen"],
-                limit: 1,
               },
             ],
           },
@@ -551,12 +571,12 @@ class AdminService {
           },
         ],
         group: [
-          "idLlanta",
-          "llanta.id_llanta",
-          "llanta->marca.id_marca",
-          "llanta->imagenes.id_imagen",
+          sequelize.col("DetallePedido.id_llanta"),
+          sequelize.col("llanta.id_llanta"),
+          sequelize.col("llanta->marca.id_marca"),
+          sequelize.col("llanta->imagenes.id_imagen"),
         ],
-        order: [[sequelize.fn("SUM", sequelize.col("cantidad")), "DESC"]],
+        order: [[sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "DESC"]],
         limit: parseInt(limit),
         subQuery: false,
       });

@@ -17,53 +17,62 @@ class AdminService {
   // DASHBOARD — métricas generales
   // ─────────────────────────────────────────────
   async getDashboard() {
-    try {
-      const ahora = new Date();
-      const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-      const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+    const ahora = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
 
-      // Ventas totales (pedidos no cancelados)
-      const ventasTotales = await Pedido.sum("total", {
-        where: { estado: { [Op.ne]: "CANCELADO" } },
-      });
+    // Helper para ejecutar cada sub-query de forma segura con fallback
+    const safe = async (label, fn, fallback) => {
+      try {
+        return await fn();
+      } catch (err) {
+        const pgErr = err.original || err;
+        console.error(`[getDashboard][${label}] ERROR:`, {
+          message: err.message,
+          pgMessage: pgErr.message,
+          pgCode: pgErr.code,
+          pgDetail: pgErr.detail,
+          sql: err.sql || null,
+        });
+        return fallback;
+      }
+    };
 
-      // Ventas del mes actual
-      const ventasMes = await Pedido.sum("total", {
-        where: {
-          estado: { [Op.ne]: "CANCELADO" },
-          createdAt: { [Op.gte]: inicioMes },
-        },
-      });
+    // Ejecutar todas las queries de forma independiente con fallbacks
+    const [ventasTotales, ventasMes, ventasMesAnterior] = await Promise.all([
+      safe("ventasTotales", () =>
+        Pedido.sum("total", { where: { estado: { [Op.ne]: "CANCELADO" } } }), 0),
+      safe("ventasMes", () =>
+        Pedido.sum("total", {
+          where: {
+            estado: { [Op.ne]: "CANCELADO" },
+            createdAt: { [Op.gte]: inicioMes },
+          },
+        }), 0),
+      safe("ventasMesAnterior", () =>
+        Pedido.sum("total", {
+          where: {
+            estado: { [Op.ne]: "CANCELADO" },
+            createdAt: { [Op.between]: [inicioMesAnterior, inicioMes] },
+          },
+        }), 0),
+    ]);
 
-      // Ventas del mes anterior (para comparativa)
-      const ventasMesAnterior = await Pedido.sum("total", {
-        where: {
-          estado: { [Op.ne]: "CANCELADO" },
-          createdAt: { [Op.between]: [inicioMesAnterior, inicioMes] },
-        },
-      });
-
-      // Total de pedidos por estado
-      const pedidosPorEstado = await Pedido.findAll({
+    const pedidosPorEstado = await safe("pedidosPorEstado", () =>
+      Pedido.findAll({
         attributes: [
           "estado",
           [sequelize.fn("COUNT", sequelize.col("id_pedido")), "total"],
         ],
         group: ["estado"],
         raw: true,
-      });
+      }), []);
 
-      // Pedidos recientes (últimos 10)
-      const pedidosRecientes = await Pedido.findAll({
+    const pedidosRecientes = await safe("pedidosRecientes", () =>
+      Pedido.findAll({
         limit: 10,
         order: [["createdAt", "DESC"]],
-        attributes: [
-          "idPedido",
-          "numeroPedido",
-          "total",
-          "estado",
-          "createdAt",
-        ],
+        attributes: ["idPedido", "numeroPedido", "total", "estado", "createdAt"],
         include: [
           {
             model: Cliente,
@@ -71,119 +80,100 @@ class AdminService {
             attributes: ["idCliente", "nombres", "apellidos", "email"],
           },
         ],
-      });
+      }), []);
 
-      // Productos más vendidos (top 5) — Raw SQL para evitar el bug de GROUP BY
-      // con paths Sequelize ("llanta->marca.id_marca") que PostgreSQL rechaza.
-      const [productosMasVendidosRaw] = await sequelize.query(`
-        SELECT
+    // Productos más vendidos — Raw SQL con QueryTypes.SELECT explícito
+    const productosMasVendidos = await safe("productosMasVendidos", async () => {
+      const productosMasVendidosRaw = await sequelize.query(
+        `SELECT
           dp.id_llanta                          AS "idLlanta",
           SUM(dp.cantidad)                      AS "unidadesVendidas",
           SUM(dp.subtotal)                      AS "totalGenerado",
-          l.id_llanta                           AS "llanta.idLlanta",
-          l.modelo                              AS "llanta.modelo",
-          l.ancho                               AS "llanta.ancho",
-          l.perfil                              AS "llanta.perfil",
-          l.rin                                 AS "llanta.rin",
-          l.precio                              AS "llanta.precio",
-          l.stock                               AS "llanta.stock",
-          m.id_marca                            AS "llanta.marca.idMarca",
-          m.nombre                              AS "llanta.marca.nombre",
-          MIN(img.url_imagen)                   AS "llanta.imagenPrincipal"
+          l.id_llanta                           AS "llantaIdLlanta",
+          l.modelo                              AS "llantaModelo",
+          l.ancho                               AS "llantaAncho",
+          l.perfil                              AS "llantaPerfil",
+          l.rin                                 AS "llantaRin",
+          l.precio                              AS "llantaPrecio",
+          l.stock                               AS "llantaStock",
+          m.id_marca                            AS "marcaIdMarca",
+          m.nombre                              AS "marcaNombre",
+          MIN(img.url_imagen)                   AS "imagenPrincipal"
         FROM detalle_pedidos dp
         INNER JOIN pedidos p   ON p.id_pedido  = dp.id_pedido  AND p.estado <> 'CANCELADO'
         INNER JOIN llantas  l  ON l.id_llanta  = dp.id_llanta
         INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
         LEFT  JOIN imagenes_llantas img
                ON img.id_llanta = l.id_llanta AND img.tipo_imagen = 'PRINCIPAL'
-        GROUP BY dp.id_llanta, l.id_llanta, m.id_marca
+        GROUP BY dp.id_llanta, l.id_llanta, l.modelo, l.ancho, l.perfil, l.rin,
+                 l.precio, l.stock, m.id_marca, m.nombre
         ORDER BY SUM(dp.cantidad) DESC
-        LIMIT 5
-      `);
+        LIMIT 5`,
+        { type: sequelize.QueryTypes.SELECT }
+      );
 
-      // Normalizar para mantener la misma forma que esperaba el frontend
-      const productosMasVendidos = productosMasVendidosRaw.map((row) => ({
+      return productosMasVendidosRaw.map((row) => ({
         idLlanta: row.idLlanta,
         unidadesVendidas: Number(row.unidadesVendidas),
         totalGenerado: Number(row.totalGenerado),
         llanta: {
-          idLlanta: row["llanta.idLlanta"],
-          modelo: row["llanta.modelo"],
-          ancho: row["llanta.ancho"],
-          perfil: row["llanta.perfil"],
-          rin: row["llanta.rin"],
-          precio: row["llanta.precio"],
-          stock: row["llanta.stock"],
+          idLlanta: row.llantaIdLlanta,
+          modelo: row.llantaModelo,
+          ancho: row.llantaAncho,
+          perfil: row.llantaPerfil,
+          rin: row.llantaRin,
+          precio: row.llantaPrecio,
+          stock: row.llantaStock,
           marca: {
-            idMarca: row["llanta.marca.idMarca"],
-            nombre: row["llanta.marca.nombre"],
+            idMarca: row.marcaIdMarca,
+            nombre: row.marcaNombre,
           },
-          imagenes: row["llanta.imagenPrincipal"]
-            ? [{ urlImagen: row["llanta.imagenPrincipal"] }]
+          imagenes: row.imagenPrincipal
+            ? [{ urlImagen: row.imagenPrincipal }]
             : [],
         },
       }));
+    }, []);
 
-      // Clientes nuevos este mes
-      const clientesNuevosMes = await Cliente.count({
-        where: {
-          createdAt: { [Op.gte]: inicioMes },
-          activo: true,
-        },
-      });
+    const [clientesNuevosMes, totalClientes] = await Promise.all([
+      safe("clientesNuevosMes", () =>
+        Cliente.count({ where: { createdAt: { [Op.gte]: inicioMes }, activo: true } }), 0),
+      safe("totalClientes", () =>
+        Cliente.count({ where: { activo: true } }), 0),
+    ]);
 
-      // Total clientes activos
-      const totalClientes = await Cliente.count({ where: { activo: true } });
-
-      // Stock bajo (menos de 5 unidades)
-      const stockBajo = await Llanta.findAll({
+    const stockBajo = await safe("stockBajo", () =>
+      Llanta.findAll({
         where: { stock: { [Op.lt]: 5 }, activo: true },
         attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin", "stock"],
         include: [
-          {
-            model: MarcaLlanta,
-            as: "marca",
-            attributes: ["idMarca", "nombre"],
-          },
+          { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre"] },
         ],
         order: [["stock", "ASC"]],
         limit: 10,
-      });
+      }), []);
 
-      return {
-        ventas: {
-          total: ventasTotales || 0,
-          mes: ventasMes || 0,
-          mesAnterior: ventasMesAnterior || 0,
-          crecimiento: ventasMesAnterior
+    return {
+      ventas: {
+        total: ventasTotales || 0,
+        mes: ventasMes || 0,
+        mesAnterior: ventasMesAnterior || 0,
+        crecimiento:
+          ventasMesAnterior && ventasMesAnterior !== 0
             ? (((ventasMes - ventasMesAnterior) / ventasMesAnterior) * 100).toFixed(1)
             : null,
-        },
-        pedidos: {
-          porEstado: pedidosPorEstado,
-          recientes: pedidosRecientes,
-        },
-        clientes: {
-          total: totalClientes,
-          nuevosEsteMes: clientesNuevosMes,
-        },
-        productosMasVendidos,
-        stockBajo,
-      };
-    } catch (error) {
-      // Exponer el error original de Sequelize/PostgreSQL para diagnóstico en producción
-      const pgError = error.original || error;
-      console.error("[getDashboard] Error:", {
-        message: error.message,
-        pgMessage: pgError.message,
-        pgCode: pgError.code,
-        pgDetail: pgError.detail,
-        sql: error.sql || null,
-        stack: error.stack,
-      });
-      const detailedMessage = pgError.message || error.message;
-      throw new Error(`Error al obtener dashboard: ${detailedMessage}`);
-    }
+      },
+      pedidos: {
+        porEstado: pedidosPorEstado,
+        recientes: pedidosRecientes,
+      },
+      clientes: {
+        total: totalClientes,
+        nuevosEsteMes: clientesNuevosMes,
+      },
+      productosMasVendidos,
+      stockBajo,
+    };
   }
 
   // ─────────────────────────────────────────────
@@ -537,23 +527,22 @@ class AdminService {
       const fechaDesde = desde ? new Date(desde) : new Date(ahora.getFullYear(), ahora.getMonth(), 1);
       const fechaHasta = hasta ? new Date(hasta) : ahora;
 
-      // Raw SQL para evitar el bug de GROUP BY con paths Sequelize en PostgreSQL
-      const [productosRaw] = await sequelize.query(
-        `
-        SELECT
+      // Raw SQL con QueryTypes.SELECT explícito para evitar el doble-array [results, metadata]
+      const productosRaw = await sequelize.query(
+        `SELECT
           dp.id_llanta                  AS "idLlanta",
           SUM(dp.cantidad)              AS "unidadesVendidas",
           SUM(dp.subtotal)              AS "totalGenerado",
           COUNT(dp.id_pedido)           AS "vecesComprado",
-          l.id_llanta                   AS "llanta.idLlanta",
-          l.modelo                      AS "llanta.modelo",
-          l.ancho                       AS "llanta.ancho",
-          l.perfil                      AS "llanta.perfil",
-          l.rin                         AS "llanta.rin",
-          l.precio                      AS "llanta.precio",
-          l.stock                       AS "llanta.stock",
-          m.nombre                      AS "llanta.marca.nombre",
-          MIN(img.url_imagen)           AS "llanta.imagenPrincipal"
+          l.id_llanta                   AS "llantaIdLlanta",
+          l.modelo                      AS "llantaModelo",
+          l.ancho                       AS "llantaAncho",
+          l.perfil                      AS "llantaPerfil",
+          l.rin                         AS "llantaRin",
+          l.precio                      AS "llantaPrecio",
+          l.stock                       AS "llantaStock",
+          m.nombre                      AS "marcaNombre",
+          MIN(img.url_imagen)           AS "imagenPrincipal"
         FROM detalle_pedidos dp
         INNER JOIN pedidos p  ON p.id_pedido = dp.id_pedido
                               AND p.estado <> 'CANCELADO'
@@ -562,13 +551,13 @@ class AdminService {
         INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
         LEFT  JOIN imagenes_llantas img
                ON img.id_llanta = l.id_llanta AND img.tipo_imagen = 'PRINCIPAL'
-        GROUP BY dp.id_llanta, l.id_llanta, m.id_marca
+        GROUP BY dp.id_llanta, l.id_llanta, l.modelo, l.ancho, l.perfil, l.rin,
+                 l.precio, l.stock, m.id_marca, m.nombre
         ORDER BY SUM(dp.cantidad) DESC
-        LIMIT :limit
-        `,
+        LIMIT :limit`,
         {
           replacements: { desde: fechaDesde, hasta: fechaHasta, limit: parseInt(limit) },
-          type: sequelize.QueryTypes ? undefined : "RAW",
+          type: sequelize.QueryTypes.SELECT,
         }
       );
 
@@ -578,16 +567,16 @@ class AdminService {
         totalGenerado: Number(row.totalGenerado),
         vecesComprado: Number(row.vecesComprado),
         llanta: {
-          idLlanta: row["llanta.idLlanta"],
-          modelo: row["llanta.modelo"],
-          ancho: row["llanta.ancho"],
-          perfil: row["llanta.perfil"],
-          rin: row["llanta.rin"],
-          precio: row["llanta.precio"],
-          stock: row["llanta.stock"],
-          marca: { nombre: row["llanta.marca.nombre"] },
-          imagenes: row["llanta.imagenPrincipal"]
-            ? [{ urlImagen: row["llanta.imagenPrincipal"] }]
+          idLlanta: row.llantaIdLlanta,
+          modelo: row.llantaModelo,
+          ancho: row.llantaAncho,
+          perfil: row.llantaPerfil,
+          rin: row.llantaRin,
+          precio: row.llantaPrecio,
+          stock: row.llantaStock,
+          marca: { nombre: row.marcaNombre },
+          imagenes: row.imagenPrincipal
+            ? [{ urlImagen: row.imagenPrincipal }]
             : [],
         },
       }));

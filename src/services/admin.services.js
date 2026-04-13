@@ -73,55 +73,56 @@ class AdminService {
         ],
       });
 
-      // Productos más vendidos (top 5)
-      // NOTA: subQuery:false require GROUP BY con nombres SQL reales (sequelize.col),
-      // NO paths de Sequelize como "llanta->marca.id_marca" que PostgreSQL rechaza.
-      // Además, limit dentro de include anidado es inválido con subQuery:false.
-      const productosMasVendidos = await DetallePedido.findAll({
-        attributes: [
-          [sequelize.col("DetallePedido.id_llanta"), "idLlanta"],
-          [sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "unidadesVendidas"],
-          [sequelize.fn("SUM", sequelize.col("DetallePedido.subtotal")), "totalGenerado"],
-        ],
-        include: [
-          {
-            model: Llanta,
-            as: "llanta",
-            attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin", "precio", "stock"],
-            include: [
-              {
-                model: MarcaLlanta,
-                as: "marca",
-                attributes: ["idMarca", "nombre"],
-              },
-              {
-                // Sin limit aquí — no es compatible con GROUP BY + subQuery:false en PG
-                model: ImagenLlanta,
-                as: "imagenes",
-                where: { tipoImagen: "PRINCIPAL" },
-                required: false,
-                attributes: ["urlImagen"],
-              },
-            ],
+      // Productos más vendidos (top 5) — Raw SQL para evitar el bug de GROUP BY
+      // con paths Sequelize ("llanta->marca.id_marca") que PostgreSQL rechaza.
+      const [productosMasVendidosRaw] = await sequelize.query(`
+        SELECT
+          dp.id_llanta                          AS "idLlanta",
+          SUM(dp.cantidad)                      AS "unidadesVendidas",
+          SUM(dp.subtotal)                      AS "totalGenerado",
+          l.id_llanta                           AS "llanta.idLlanta",
+          l.modelo                              AS "llanta.modelo",
+          l.ancho                               AS "llanta.ancho",
+          l.perfil                              AS "llanta.perfil",
+          l.rin                                 AS "llanta.rin",
+          l.precio                              AS "llanta.precio",
+          l.stock                               AS "llanta.stock",
+          m.id_marca                            AS "llanta.marca.idMarca",
+          m.nombre                              AS "llanta.marca.nombre",
+          MIN(img.url_imagen)                   AS "llanta.imagenPrincipal"
+        FROM detalle_pedidos dp
+        INNER JOIN pedidos p   ON p.id_pedido  = dp.id_pedido  AND p.estado <> 'CANCELADO'
+        INNER JOIN llantas  l  ON l.id_llanta  = dp.id_llanta
+        INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
+        LEFT  JOIN imagenes_llantas img
+               ON img.id_llanta = l.id_llanta AND img.tipo_imagen = 'PRINCIPAL'
+        GROUP BY dp.id_llanta, l.id_llanta, m.id_marca
+        ORDER BY SUM(dp.cantidad) DESC
+        LIMIT 5
+      `);
+
+      // Normalizar para mantener la misma forma que esperaba el frontend
+      const productosMasVendidos = productosMasVendidosRaw.map((row) => ({
+        idLlanta: row.idLlanta,
+        unidadesVendidas: Number(row.unidadesVendidas),
+        totalGenerado: Number(row.totalGenerado),
+        llanta: {
+          idLlanta: row["llanta.idLlanta"],
+          modelo: row["llanta.modelo"],
+          ancho: row["llanta.ancho"],
+          perfil: row["llanta.perfil"],
+          rin: row["llanta.rin"],
+          precio: row["llanta.precio"],
+          stock: row["llanta.stock"],
+          marca: {
+            idMarca: row["llanta.marca.idMarca"],
+            nombre: row["llanta.marca.nombre"],
           },
-          {
-            model: Pedido,
-            as: "pedido",
-            where: { estado: { [Op.ne]: "CANCELADO" } },
-            attributes: [],
-          },
-        ],
-        // GROUP BY con nombres de columna SQL reales que PostgreSQL entiende
-        group: [
-          sequelize.col("DetallePedido.id_llanta"),
-          sequelize.col("llanta.id_llanta"),
-          sequelize.col("llanta->marca.id_marca"),
-          sequelize.col("llanta->imagenes.id_imagen"),
-        ],
-        order: [[sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "DESC"]],
-        limit: 5,
-        subQuery: false,
-      });
+          imagenes: row["llanta.imagenPrincipal"]
+            ? [{ urlImagen: row["llanta.imagenPrincipal"] }]
+            : [],
+        },
+      }));
 
       // Clientes nuevos este mes
       const clientesNuevosMes = await Cliente.count({
@@ -536,50 +537,60 @@ class AdminService {
       const fechaDesde = desde ? new Date(desde) : new Date(ahora.getFullYear(), ahora.getMonth(), 1);
       const fechaHasta = hasta ? new Date(hasta) : ahora;
 
-      const productos = await DetallePedido.findAll({
-        attributes: [
-          [sequelize.col("DetallePedido.id_llanta"), "idLlanta"],
-          [sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "unidadesVendidas"],
-          [sequelize.fn("SUM", sequelize.col("DetallePedido.subtotal")), "totalGenerado"],
-          [sequelize.fn("COUNT", sequelize.col("DetallePedido.id_pedido")), "vecesComprado"],
-        ],
-        include: [
-          {
-            model: Llanta,
-            as: "llanta",
-            attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin", "precio", "stock"],
-            include: [
-              { model: MarcaLlanta, as: "marca", attributes: ["nombre"] },
-              {
-                // Sin limit — incompatible con GROUP BY + subQuery:false
-                model: ImagenLlanta,
-                as: "imagenes",
-                where: { tipoImagen: "PRINCIPAL" },
-                required: false,
-                attributes: ["urlImagen"],
-              },
-            ],
-          },
-          {
-            model: Pedido,
-            as: "pedido",
-            where: {
-              estado: { [Op.ne]: "CANCELADO" },
-              createdAt: { [Op.between]: [fechaDesde, fechaHasta] },
-            },
-            attributes: [],
-          },
-        ],
-        group: [
-          sequelize.col("DetallePedido.id_llanta"),
-          sequelize.col("llanta.id_llanta"),
-          sequelize.col("llanta->marca.id_marca"),
-          sequelize.col("llanta->imagenes.id_imagen"),
-        ],
-        order: [[sequelize.fn("SUM", sequelize.col("DetallePedido.cantidad")), "DESC"]],
-        limit: parseInt(limit),
-        subQuery: false,
-      });
+      // Raw SQL para evitar el bug de GROUP BY con paths Sequelize en PostgreSQL
+      const [productosRaw] = await sequelize.query(
+        `
+        SELECT
+          dp.id_llanta                  AS "idLlanta",
+          SUM(dp.cantidad)              AS "unidadesVendidas",
+          SUM(dp.subtotal)              AS "totalGenerado",
+          COUNT(dp.id_pedido)           AS "vecesComprado",
+          l.id_llanta                   AS "llanta.idLlanta",
+          l.modelo                      AS "llanta.modelo",
+          l.ancho                       AS "llanta.ancho",
+          l.perfil                      AS "llanta.perfil",
+          l.rin                         AS "llanta.rin",
+          l.precio                      AS "llanta.precio",
+          l.stock                       AS "llanta.stock",
+          m.nombre                      AS "llanta.marca.nombre",
+          MIN(img.url_imagen)           AS "llanta.imagenPrincipal"
+        FROM detalle_pedidos dp
+        INNER JOIN pedidos p  ON p.id_pedido = dp.id_pedido
+                              AND p.estado <> 'CANCELADO'
+                              AND p.created_at BETWEEN :desde AND :hasta
+        INNER JOIN llantas l  ON l.id_llanta = dp.id_llanta
+        INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
+        LEFT  JOIN imagenes_llantas img
+               ON img.id_llanta = l.id_llanta AND img.tipo_imagen = 'PRINCIPAL'
+        GROUP BY dp.id_llanta, l.id_llanta, m.id_marca
+        ORDER BY SUM(dp.cantidad) DESC
+        LIMIT :limit
+        `,
+        {
+          replacements: { desde: fechaDesde, hasta: fechaHasta, limit: parseInt(limit) },
+          type: sequelize.QueryTypes ? undefined : "RAW",
+        }
+      );
+
+      const productos = productosRaw.map((row) => ({
+        idLlanta: row.idLlanta,
+        unidadesVendidas: Number(row.unidadesVendidas),
+        totalGenerado: Number(row.totalGenerado),
+        vecesComprado: Number(row.vecesComprado),
+        llanta: {
+          idLlanta: row["llanta.idLlanta"],
+          modelo: row["llanta.modelo"],
+          ancho: row["llanta.ancho"],
+          perfil: row["llanta.perfil"],
+          rin: row["llanta.rin"],
+          precio: row["llanta.precio"],
+          stock: row["llanta.stock"],
+          marca: { nombre: row["llanta.marca.nombre"] },
+          imagenes: row["llanta.imagenPrincipal"]
+            ? [{ urlImagen: row["llanta.imagenPrincipal"] }]
+            : [],
+        },
+      }));
 
       return {
         periodo: { desde: fechaDesde, hasta: fechaHasta },

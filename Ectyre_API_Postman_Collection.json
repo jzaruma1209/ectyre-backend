@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "ectyre-api-v1-complete-collection",
-    "name": "🛞 Ectyre API v1.0.2 — Colección Completa",
-    "description": "# 🛞 Ectyre API — Colección Completa para Postman\n\n**Versión:** 1.0.2\n**Base URL:** `http://localhost:8080/api/v1`\n**Autenticación:** Bearer Token (JWT) / Google OAuth 2.0\n\n---\n\n## 📋 Descripción General\nEctyre es una API REST para una tienda de llantas online. Permite gestionar catálogo de llantas, clientes, carrito de compras, pedidos, direcciones de entrega, y un panel de administración completo con reportes.\n\n---\n\n## 🔑 Leyenda de Seguridad\n- 🌍 **Pública** — Sin autenticación requerida\n- 🔒 **Privada** — Requiere `Authorization: Bearer <token>`\n- 👑 **Admin** — Requiere JWT + rol Admin\n- 🌍/🔒 **Mixta** — Funciona con o sin autenticación (carrito soporta sesión anónima)\n\n---\n\n## 🧪 Cómo Testear (Paso a Paso)\n\n### 1. Configurar Variables\nLa colección usa la variable `{{baseUrl}}` configurada a `http://localhost:8080/api/v1`.\nCrea un Environment en Postman con:\n- `baseUrl` = `http://localhost:8080/api/v1`\n- `token` = (se llena automáticamente al hacer Login Usuario)\n- `adminToken` = (se llena automáticamente al hacer Login Admin)\n\n### 2. Flujo Recomendado de Testing\n1. Ejecuta **Health Check** para verificar que el servidor está arriba\n2. Ejecuta **Registro** para crear un usuario\n3. Ejecuta **Login Usuario** → el token se guarda automáticamente en `{{token}}`\n4. Ejecuta **Login Admin** → el token se guarda en `{{adminToken}}`\n5. Ahora puedes probar cualquier endpoint protegido\n\n### 3. Datos del Seeder\n- Llantas: IDs 1–13\n- Marcas de vehículos: IDs 1–8\n- Admin: `admin@ectyre.com` / `Admin2026#Ectyre`\n- Usuario de prueba: Registra uno nuevo con el endpoint de Registro\n\n### 4. Errores Comunes\n- **401 Unauthorized**: Token JWT expirado o no enviado. Haz login de nuevo.\n- **403 Forbidden**: No tienes permisos de Admin. Usa `{{adminToken}}`.\n- **429 Too Many Requests**: Rate limit alcanzado. Espera unos minutos.\n- **400 Bad Request**: Revisa el body JSON enviado, campos requeridos faltantes.\n\n---\n\n## 📊 Resumen de Endpoints (43 total)\n| Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |\n|---|---|---|---|---|\n| Health Check | 2 | 2 | 0 | 0 |\n| Auth (OAuth) | 3 | 3 | 0 | 0 |\n| Clientes | 5 | 2 | 3 | 0 |\n| Llantas | 8 | 4 | 0 | 4 |\n| Vehículos | 3 | 3 | 0 | 0 |\n| Carrito | 5 | 0 | 5* | 0 |\n| Pedidos | 4 | 0 | 4 | 0 |\n| Direcciones | 4 | 0 | 4 | 0 |\n| Admin | 12 | 0 | 0 | 12 |\n| **Total** | **46** | **14** | **16** | **16** |\n\n> *El carrito acepta autenticación opcional (mixta)\n\n---\n\n*Colección generada para Ectyre API v1.0.2 — Última actualización: 2026-03-24*",
+    "name": "🛞 Ectyre API v1.1.0 — Colección Completa",
+    "description": "# 🛞 Ectyre API — Colección Completa para Postman\n\n**Versión:** 1.1.0\n**Base URL:** `http://localhost:8080/api/v1`\n**Autenticación:** Bearer Token (JWT)\n\n---\n\n## 📋 Descripción General\nEctyre es una API REST para una tienda de llantas online. Permite gestionar catálogo de llantas, clientes, carrito de compras, pedidos, direcciones de entrega, vehículos y un panel de administración completo con reportes.\n\n---\n\n## 🔑 Leyenda de Seguridad\n- 🌍 **Pública** — Sin autenticación requerida\n- 🔒 **Privada** — Requiere `Authorization: Bearer <token>`\n- 👑 **Admin** — Requiere JWT + rol Admin\n- 🌍/🔒 **Mixta** — Funciona con o sin autenticación (carrito soporta sesión anónima)\n\n---\n\n## 🧪 Cómo Testear (Paso a Paso)\n\n### 1. Configurar Variables\nLa colección usa la variable `{{baseUrl}}` configurada a `http://localhost:8080/api/v1`.\nCrea un Environment en Postman con:\n- `baseUrl` = `http://localhost:8080/api/v1`\n- `token` = (se llena automáticamente al hacer Login Usuario)\n- `adminToken` = (se llena automáticamente al hacer Login Admin)\n\n### 2. Flujo Recomendado de Testing\n1. Ejecuta **Health Check** para verificar que el servidor está arriba\n2. Ejecuta **Registro** para crear un usuario\n3. Ejecuta **Login Usuario** → el token se guarda automáticamente en `{{token}}`\n4. Ejecuta **Login Admin** → el token se guarda en `{{adminToken}}`\n5. Ahora puedes probar cualquier endpoint protegido\n\n### 3. Datos del Seeder\n- Llantas: IDs 1–13\n- Marcas de vehículos: IDs 1–8\n- Admin: `admin@ectyre.com` / `Admin2026#Ectyre`\n- Usuario de prueba: Registra uno nuevo con el endpoint de Registro\n\n### 4. Errores Comunes\n- **401 Unauthorized**: Token JWT expirado o no enviado. Haz login de nuevo.\n- **403 Forbidden**: No tienes permisos de Admin. Usa `{{adminToken}}`.\n- **429 Too Many Requests**: Rate limit alcanzado. Espera unos minutos.\n- **400 Bad Request**: Revisa el body JSON enviado, campos requeridos faltantes.\n\n---\n\n## 📊 Resumen de Endpoints (42 total)\n| Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |\n|---|---|---|---|---|\n| Health Check | 2 | 2 | 0 | 0 |\n| Clientes | 5 | 2 | 3 | 0 |\n| Llantas | 7 | 4 | 0 | 3 |\n| Vehículos | 3 | 3 | 0 | 0 |\n| Carrito | 5 | 0 | 5* | 0 |\n| Pedidos | 4 | 0 | 4 | 0 |\n| Direcciones | 4 | 0 | 4 | 0 |\n| Admin — Dashboard | 2 | 0 | 0 | 2 |\n| Admin — Clientes | 4 | 0 | 0 | 4 |\n| Admin — Pedidos | 3 | 0 | 0 | 3 |\n| Admin — Inventario | 1 | 0 | 0 | 1 |\n| Admin — Reportes | 2 | 0 | 0 | 2 |\n| **Total** | **42** | **11** | **16** | **15** |\n\n> *El carrito acepta autenticación opcional (mixta)\n\n---\n\n*Colección generada para Ectyre API v1.1.0 — Última actualización: 2026-04-13*",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -54,40 +54,7 @@
               "port": "8080",
               "path": ["health"]
             },
-            "description": "🌍 **PÚBLICA** — Sin autenticación.\n\n**¿Qué hace?** Devuelve el estado actual del servidor con timestamp.\n\n**¿Qué se necesita?** Nada.\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"status\": \"OK\",\n  \"timestamp\": \"2026-03-24T...\"\n}\n```\n\n**Testing:** Verifica que `status` sea `\"OK\"`."
-          }
-        }
-      ]
-    },
-    {
-      "name": "🌍 Auth — Google OAuth",
-      "description": "🌍 **PÚBLICO** — Autenticación con Google OAuth 2.0.\n\n**Propósito:** Permitir login/registro con cuenta de Google. Genera un JWT que se usa igual que el login normal.\n\n**⚠️ IMPORTANTE:** Estas rutas funcionan en el navegador, NO en Postman directamente (requieren redirección a Google).\n\n**Cómo testear:**\n1. Abre `http://localhost:8080/api/v1/auth/google` en tu **navegador**.\n2. Selecciona una cuenta de Google.\n3. Serás redirigido a `CLIENT_URL/auth/callback?token=<JWT>`.\n4. Copia el token de la URL y úsalo como Bearer Token en Postman.\n\n**Nota:** Si el email de Google ya existe en la BD, se vincula la cuenta existente con el googleId. Si no existe, se crea un nuevo cliente.",
-      "item": [
-        {
-          "name": "Iniciar Auth Google [🌍 Pública]",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/auth/google",
-            "description": "🌍 **PÚBLICA** — Redirige al usuario a la pantalla de selección de cuenta de Google.\n\n**⚠️ Abrir en NAVEGADOR, no en Postman.** Postman no puede manejar la redirección OAuth.\n\n**¿Qué hace?** Inicia el flujo OAuth 2.0 con Google.\n\n**Testing:** Abre esta URL en el navegador y verifica que aparezca la pantalla de Google."
-          }
-        },
-        {
-          "name": "Callback Google [🌍 Pública]",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/auth/google/callback",
-            "description": "🌍 **PÚBLICA** — Callback automático de Google. No se llama manualmente.\n\n**¿Qué hace?** Recibe la respuesta de Google, crea/vincula la cuenta del usuario, genera JWT y redirige al frontend con `?token=<JWT>`.\n\n**Testing:** Este endpoint es llamado automáticamente por Google después de autenticarse. NO lo llames directamente."
-          }
-        },
-        {
-          "name": "Auth Failure [🌍 Pública]",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/auth/failure",
-            "description": "🌍 **PÚBLICA** — Ruta de fallo de autenticación con Google.\n\n**¿Qué hace?** Se activa cuando Google rechaza la autenticación.\n\n**Respuesta (401):**\n```json\n{\n  \"success\": false,\n  \"message\": \"Autenticación con Google fallida. Intenta nuevamente.\"\n}\n```\n\n**Testing:** Puedes llamar directamente para verificar que responde con 401."
+            "description": "🌍 **PÚBLICA** — Sin autenticación.\n\n**¿Qué hace?** Devuelve el estado actual del servidor con timestamp.\n\n**¿Qué se necesita?** Nada.\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"status\": \"OK\",\n  \"timestamp\": \"2026-04-13T...\"\n}\n```\n\n**Testing:** Verifica que `status` sea `\"OK\"`."
           }
         }
       ]
@@ -223,7 +190,7 @@
     },
     {
       "name": "🛞 Llantas",
-      "description": "**Catálogo de llantas con búsquedas avanzadas e imágenes en Cloudinary.**\n\n**Clasificación:**\n- 🌍 **Públicas (4):** Listar, Buscar por Medida, Buscar por Vehículo, Detalle\n- 👑 **Admin (4):** Crear, Actualizar, Eliminar llanta, Eliminar imagen\n\n**Cómo testear:**\n- Rutas públicas: se pueden ejecutar sin autenticación.\n- Rutas Admin: primero haz Login Admin para obtener `{{adminToken}}`.\n- Crear/Actualizar llantas usa **form-data** (no JSON) para poder subir imágenes a Cloudinary.\n- IDs válidos del seeder: 1–13.",
+      "description": "**Catálogo de llantas con búsquedas avanzadas e imágenes en Cloudinary.**\n\n**Clasificación:**\n- 🌍 **Públicas (4):** Listar, Buscar por Medida, Buscar por Vehículo, Detalle\n- 👑 **Admin (3):** Crear, Actualizar, Eliminar llanta\n\n**Nota:** La eliminación de imágenes individuales se hace vía Cloudinary o al actualizar la llanta.\n**Cómo testear:**\n- Rutas públicas: se pueden ejecutar sin autenticación.\n- Rutas Admin: primero haz Login Admin para obtener `{{adminToken}}`.\n- Crear/Actualizar llantas usa **form-data** (no JSON) para poder subir imágenes a Cloudinary.\n- IDs válidos del seeder: 1–13.",
       "item": [
         {
           "name": "Listar Llantas [🌍 Pública]",
@@ -354,17 +321,6 @@
             ],
             "url": "{{baseUrl}}/llantas/1",
             "description": "👑 **ADMIN** — Requiere `Authorization: Bearer {{adminToken}}`.\n\n**¿Qué hace?** Elimina una llanta del catálogo.\n\n**URL Param:** Cambia `/1` por el ID de la llanta.\n\n**⚠️ Precaución:** Esta acción es irreversible.\n\n**Testing:** Crea una llanta primero, luego elimínala. Verifica que ya no aparezca en el listado."
-          }
-        },
-        {
-          "name": "Eliminar Imagen de Llanta [👑 Admin]",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/llantas/1/imagenes/1",
-            "description": "👑 **ADMIN** — Requiere `Authorization: Bearer {{adminToken}}`.\n\n**¿Qué hace?** Elimina una imagen específica de una llanta. La imagen se elimina de Cloudinary.\n\n**URL Params:**\n- Primer ID = ID de la llanta\n- Segundo ID = ID de la imagen a eliminar\n\n**Testing:** Consulta el detalle de una llanta para ver sus imagen IDs."
           }
         }
       ]
@@ -609,7 +565,7 @@
                   { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
                 "url": "{{baseUrl}}/admin/dashboard",
-                "description": "👑 **ADMIN** — Métricas generales: total clientes, total pedidos, pedidos pendientes, ingresos del mes.\n\n**Testing:** Verifica que devuelva las 4 métricas principales."
+                "description": "👑 **ADMIN** — Métricas generales: total clientes, total pedidos, pedidos pendientes, ingresos del mes.\n\n**Respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"totalClientes\": 10,\n    \"totalPedidos\": 25,\n    \"pedidosPendientes\": 3,\n    \"ingresosMes\": 4500.00\n  }\n}\n```\n\n**Testing:** Verifica que devuelva las métricas principales."
               }
             },
             {
@@ -627,7 +583,7 @@
         },
         {
           "name": "👥 Gestión Clientes",
-          "description": "CRUD de clientes desde el panel admin.",
+          "description": "Administración de clientes desde el panel admin.",
           "item": [
             {
               "name": "Listar Clientes [👑 Admin]",
@@ -641,12 +597,12 @@
                   "host": ["{{baseUrl}}"],
                   "path": ["admin", "clientes"],
                   "query": [
-                    { "key": "page", "value": "1", "description": "Página" },
-                    { "key": "limit", "value": "10", "description": "Items por página" },
+                    { "key": "page", "value": "1", "description": "Página (default: 1)" },
+                    { "key": "limit", "value": "10", "description": "Items por página (default: 10)" },
                     { "key": "search", "value": "", "disabled": true, "description": "Buscar por nombre o email" }
                   ]
                 },
-                "description": "👑 **ADMIN** — Lista todos los clientes con paginación y búsqueda.\n\n**Testing:** Habilita `search` para buscar por nombre o email."
+                "description": "👑 **ADMIN** — Lista todos los clientes con paginación y búsqueda.\n\n**Query Params opcionales:** `page`, `limit`, `search`.\n\n**Testing:** Habilita `search` para buscar por nombre o email."
               }
             },
             {
@@ -668,7 +624,7 @@
                   { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
                 "url": "{{baseUrl}}/admin/clientes/1/toggle",
-                "description": "👑 **ADMIN** — Activa/desactiva un cliente.\n\n**URL Param:** Cambia `/1` por el ID.\n\n**Testing:** Ejecuta, luego verifica con 'Detalle Cliente' que el campo `activo` cambió."
+                "description": "👑 **ADMIN** — Activa/desactiva un cliente (toggle).\n\n**URL Param:** Cambia `/1` por el ID del cliente.\n\n**⚠️ No requiere body.** Cambia el estado `activo` automáticamente.\n\n**Testing:** Ejecuta, luego verifica con 'Detalle Cliente' que el campo `activo` cambió."
               }
             },
             {
@@ -678,8 +634,16 @@
                 "header": [
                   { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
-                "url": "{{baseUrl}}/admin/clientes/1/pedidos",
-                "description": "👑 **ADMIN** — Historial de pedidos de un cliente específico.\n\n**URL Param:** Cambia `/1` por el ID del cliente.\n\n**Testing:** Usa un cliente que tenga pedidos creados."
+                "url": {
+                  "raw": "{{baseUrl}}/admin/clientes/1/pedidos?page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "clientes", "1", "pedidos"],
+                  "query": [
+                    { "key": "page", "value": "1", "description": "Página (default: 1)" },
+                    { "key": "limit", "value": "10", "description": "Items por página (default: 10)" }
+                  ]
+                },
+                "description": "👑 **ADMIN** — Historial de pedidos de un cliente específico con paginación.\n\n**URL Param:** Cambia `/1/` por el ID del cliente.\n\n**Testing:** Usa un cliente que tenga pedidos creados."
               }
             }
           ]
@@ -700,11 +664,12 @@
                   "host": ["{{baseUrl}}"],
                   "path": ["admin", "pedidos"],
                   "query": [
-                    { "key": "page", "value": "1" },
-                    { "key": "estado", "value": "PENDIENTE", "disabled": true, "description": "PENDIENTE | CONFIRMADO | EN_PREPARACION | ENVIADO | ENTREGADO | CANCELADO" }
+                    { "key": "page", "value": "1", "description": "Página (default: 1)" },
+                    { "key": "estado", "value": "PENDIENTE", "disabled": true, "description": "PENDIENTE | CONFIRMADO | EN_PREPARACION | ENVIADO | ENTREGADO | CANCELADO" },
+                    { "key": "limit", "value": "10", "disabled": true, "description": "Items por página (default: 10)" }
                   ]
                 },
-                "description": "👑 **ADMIN** — Lista TODOS los pedidos del sistema.\n\n**Filtro opcional:** Habilita `estado` para filtrar.\n\n**Valores válidos de estado:**\n- `PENDIENTE`\n- `CONFIRMADO`\n- `EN_PREPARACION`\n- `ENVIADO`\n- `ENTREGADO`\n- `CANCELADO`"
+                "description": "👑 **ADMIN** — Lista TODOS los pedidos del sistema.\n\n**Filtros opcionales:**\n| Param | Descripción |\n|---|---|\n| `page` | Número de página |\n| `limit` | Items por página |\n| `estado` | Filtrar por estado |\n\n**Valores válidos de estado:**\n- `PENDIENTE`\n- `CONFIRMADO`\n- `EN_PREPARACION`\n- `ENVIADO`\n- `ENTREGADO`\n- `CANCELADO`"
               }
             },
             {
@@ -772,14 +737,15 @@
                   { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/admin/reportes/ventas?periodo=mes",
+                  "raw": "{{baseUrl}}/admin/reportes/ventas",
                   "host": ["{{baseUrl}}"],
                   "path": ["admin", "reportes", "ventas"],
                   "query": [
-                    { "key": "periodo", "value": "mes", "description": "'semana' o 'mes' (default: mes)" }
+                    { "key": "desde", "value": "2026-01-01", "disabled": true, "description": "Fecha inicio (YYYY-MM-DD)" },
+                    { "key": "hasta", "value": "2026-12-31", "disabled": true, "description": "Fecha fin (YYYY-MM-DD)" }
                   ]
                 },
-                "description": "👑 **ADMIN** — Reporte de ventas entregadas agrupadas por período.\n\n**Query Param opcional:**\n| Param | Valores | Default |\n|---|---|---|\n| `periodo` | `semana` o `mes` | `mes` |\n\n**Testing:** Necesitas pedidos con estado ENTREGADO para ver datos en el reporte."
+                "description": "👑 **ADMIN** — Reporte de ventas entregadas.\n\n**Query Params opcionales:**\n| Param | Descripción |\n|---|---|\n| `desde` | Fecha de inicio (YYYY-MM-DD) |\n| `hasta` | Fecha de fin (YYYY-MM-DD) |\n\n**Testing:** Necesitas pedidos con estado ENTREGADO para ver datos en el reporte."
               }
             },
             {
@@ -789,8 +755,17 @@
                 "header": [
                   { "key": "Authorization", "value": "Bearer {{adminToken}}" }
                 ],
-                "url": "{{baseUrl}}/admin/reportes/productos-top",
-                "description": "👑 **ADMIN** — Ranking de llantas más vendidas ordenadas por cantidad despachada.\n\n**Testing:** Necesitas pedidos completados para ver el ranking."
+                "url": {
+                  "raw": "{{baseUrl}}/admin/reportes/productos-top",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "reportes", "productos-top"],
+                  "query": [
+                    { "key": "limit", "value": "10", "disabled": true, "description": "Número de productos a mostrar (default: 10)" },
+                    { "key": "desde", "value": "2026-01-01", "disabled": true, "description": "Fecha inicio (YYYY-MM-DD)" },
+                    { "key": "hasta", "value": "2026-12-31", "disabled": true, "description": "Fecha fin (YYYY-MM-DD)" }
+                  ]
+                },
+                "description": "👑 **ADMIN** — Ranking de llantas más vendidas ordenadas por cantidad despachada.\n\n**Query Params opcionales:**\n| Param | Descripción |\n|---|---|\n| `limit` | Top N productos (default: 10) |\n| `desde` | Fecha de inicio (YYYY-MM-DD) |\n| `hasta` | Fecha de fin (YYYY-MM-DD) |\n\n**Testing:** Necesitas pedidos completados para ver el ranking."
               }
             }
           ]

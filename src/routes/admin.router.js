@@ -6,6 +6,12 @@ const {
   toggleClienteActivo,
   getAllPedidos,
   updateEstadoPedido,
+  getPedidoById,
+  getPedidosByCliente,
+  updateStockLlanta,
+  getReporteVentas,
+  getProductosTop,
+  getStatsCarritos,
 } = require("../controllers/admin.controllers");
 const { verifyJWT, isAdmin } = require("../middlewares/auth.middleware");
 const { validateId } = require("../middlewares/validation.middleware");
@@ -19,13 +25,15 @@ routerAdmin.use(verifyJWT, isAdmin);
 // ─── Dashboard ──────────────────────────────
 routerAdmin.get("/dashboard", getDashboard); // 🔒 Admin — métricas generales
 
-// ─── Clientes ───────────────────────────────
+// ─── Clientes ─────────────────────────────────
 routerAdmin.get("/clientes", getAllClientes); // 🔒 Admin — listar clientes (con ?page=&limit=&search=)
 routerAdmin.get("/clientes/:id", validateId, getClienteById); // 🔒 Admin — detalle de cliente
 routerAdmin.patch("/clientes/:id/toggle", validateId, toggleClienteActivo); // 🔒 Admin — activar/desactivar cliente
+routerAdmin.get("/clientes/:id/pedidos", validateId, getPedidosByCliente); // 🔒 Admin — pedidos de un cliente (?page=&limit=)
 
-// ─── Pedidos ────────────────────────────────
+// ─── Pedidos ─────────────────────────────────
 routerAdmin.get("/pedidos", getAllPedidos); // 🔒 Admin — listar pedidos (con ?page=&estado=)
+routerAdmin.get("/pedidos/:id", validateId, getPedidoById); // 🔒 Admin — detalle de un pedido
 routerAdmin.patch(
   "/pedidos/:id/estado",
   validateId,
@@ -52,5 +60,13 @@ routerAdmin.patch(
   ],
   updateEstadoPedido // 🔒 Admin — cambiar estado de orden
 );
+
+// ─── Inventario ─────────────────────────────────
+routerAdmin.patch("/llantas/:id/stock", validateId, updateStockLlanta); // 🔒 Admin — actualizar stock de llanta
+
+// ─── Reportes ─────────────────────────────────
+routerAdmin.get("/reportes/ventas", getReporteVentas); // 🔒 Admin — reporte de ventas (?desde=&hasta=)
+routerAdmin.get("/reportes/productos-top", getProductosTop); // 🔒 Admin — top productos vendidos (?limit=10&desde=&hasta=)
+routerAdmin.get("/stats/carritos", getStatsCarritos); // 🔒 Admin — estadísticas de carritos
 
 module.exports = routerAdmin;

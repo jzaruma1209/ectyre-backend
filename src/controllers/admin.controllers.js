@@ -87,6 +87,88 @@ const updateEstadoPedido = catchError(async (req, res) => {
   });
 });
 
+// Ver detalle completo de un pedido individual
+const getPedidoById = catchError(async (req, res) => {
+  const { id } = req.params;
+  const pedido = await adminService.getPedidoById(id);
+  res.status(200).json({
+    success: true,
+    message: "Pedido obtenido correctamente",
+    data: pedido,
+  });
+});
+
+// ─────────────────────────────────────────────
+// CLIENTES — pedidos de un cliente
+// ─────────────────────────────────────────────
+
+// Listar todos los pedidos de un cliente específico
+const getPedidosByCliente = catchError(async (req, res) => {
+  const { id } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+  const resultado = await adminService.getPedidosByCliente(id, {
+    page: parseInt(page),
+    limit: parseInt(limit),
+  });
+  res.status(200).json({
+    success: true,
+    message: "Pedidos del cliente obtenidos correctamente",
+    data: resultado,
+  });
+});
+
+// ─────────────────────────────────────────────
+// INVENTARIO — stock
+// ─────────────────────────────────────────────
+
+// Actualizar únicamente el stock de una llanta
+const updateStockLlanta = catchError(async (req, res) => {
+  const { id } = req.params;
+  const { stock } = req.body;
+  const llanta = await adminService.updateStockLlanta(id, stock);
+  res.status(200).json({
+    success: true,
+    message: "Stock actualizado correctamente",
+    data: llanta,
+  });
+});
+
+// ─────────────────────────────────────────────
+// REPORTES
+// ─────────────────────────────────────────────
+
+// Reporte de ventas por período (?desde=&hasta=)
+const getReporteVentas = catchError(async (req, res) => {
+  const { desde, hasta } = req.query;
+  const reporte = await adminService.getReporteVentas({ desde, hasta });
+  res.status(200).json({
+    success: true,
+    message: "Reporte de ventas obtenido correctamente",
+    data: reporte,
+  });
+});
+
+// Top productos más vendidos (?limit=10&desde=&hasta=)
+const getProductosTop = catchError(async (req, res) => {
+  const { limit = 10, desde, hasta } = req.query;
+  const reporte = await adminService.getProductosTop({ limit, desde, hasta });
+  res.status(200).json({
+    success: true,
+    message: "Productos top obtenidos correctamente",
+    data: reporte,
+  });
+});
+
+// Estadísticas de carritos (activos, abandonados, convertidos)
+const getStatsCarritos = catchError(async (req, res) => {
+  const stats = await adminService.getStatsCarritos();
+  res.status(200).json({
+    success: true,
+    message: "Estadísticas de carritos obtenidas correctamente",
+    data: stats,
+  });
+});
+
 module.exports = {
   getDashboard,
   getAllClientes,
@@ -94,4 +176,10 @@ module.exports = {
   toggleClienteActivo,
   getAllPedidos,
   updateEstadoPedido,
+  getPedidoById,
+  getPedidosByCliente,
+  updateStockLlanta,
+  getReporteVentas,
+  getProductosTop,
+  getStatsCarritos,
 };

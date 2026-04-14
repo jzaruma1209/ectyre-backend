@@ -99,7 +99,7 @@ class AdminService {
           m.id_marca                            AS "marcaIdMarca",
           m.nombre                              AS "marcaNombre",
           MIN(img.url_imagen)                   AS "imagenPrincipal"
-        FROM detalle_pedidos dp
+        FROM detalle_pedido dp
         INNER JOIN pedidos p   ON p.id_pedido  = dp.id_pedido  AND p.estado <> 'CANCELADO'
         INNER JOIN llantas  l  ON l.id_llanta  = dp.id_llanta
         INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
@@ -524,10 +524,23 @@ class AdminService {
   async getProductosTop({ limit = 10, desde, hasta } = {}) {
     try {
       const ahora = new Date();
-      const fechaDesde = desde ? new Date(desde) : new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-      const fechaHasta = hasta ? new Date(hasta) : ahora;
+      let fechaDesde, fechaHasta;
 
-      // Raw SQL con QueryTypes.SELECT explícito para evitar el doble-array [results, metadata]
+      try {
+        fechaDesde = desde ? new Date(desde) : new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+        fechaHasta = hasta ? new Date(hasta) : ahora;
+
+        if (isNaN(fechaDesde.getTime()) || isNaN(fechaHasta.getTime())) {
+          throw new Error("Fechas inválidas");
+        }
+      } catch (dateErr) {
+        console.error("[getProductosTop] Error parsing fechas:", dateErr.message);
+        fechaDesde = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+        fechaHasta = ahora;
+      }
+
+      const parsedLimit = parseInt(limit) || 10;
+
       const productosRaw = await sequelize.query(
         `SELECT
           dp.id_llanta                  AS "idLlanta",
@@ -543,7 +556,7 @@ class AdminService {
           l.stock                       AS "llantaStock",
           m.nombre                      AS "marcaNombre",
           MIN(img.url_imagen)           AS "imagenPrincipal"
-        FROM detalle_pedidos dp
+        FROM detalle_pedido dp
         INNER JOIN pedidos p  ON p.id_pedido = dp.id_pedido
                               AND p.estado <> 'CANCELADO'
                               AND p.created_at BETWEEN :desde AND :hasta
@@ -556,16 +569,24 @@ class AdminService {
         ORDER BY SUM(dp.cantidad) DESC
         LIMIT :limit`,
         {
-          replacements: { desde: fechaDesde, hasta: fechaHasta, limit: parseInt(limit) },
+          replacements: { desde: fechaDesde, hasta: fechaHasta, limit: parsedLimit },
           type: sequelize.QueryTypes.SELECT,
         }
       );
 
+      if (!productosRaw || !Array.isArray(productosRaw)) {
+        console.warn("[getProductosTop] Query no devolvió array, retornando vacío");
+        return {
+          periodo: { desde: fechaDesde, hasta: fechaHasta },
+          productos: [],
+        };
+      }
+
       const productos = productosRaw.map((row) => ({
         idLlanta: row.idLlanta,
-        unidadesVendidas: Number(row.unidadesVendidas),
-        totalGenerado: Number(row.totalGenerado),
-        vecesComprado: Number(row.vecesComprado),
+        unidadesVendidas: Number(row.unidadesVendidas) || 0,
+        totalGenerado: Number(row.totalGenerado) || 0,
+        vecesComprado: Number(row.vecesComprado) || 0,
         llanta: {
           idLlanta: row.llantaIdLlanta,
           modelo: row.llantaModelo,
@@ -586,6 +607,7 @@ class AdminService {
         productos,
       };
     } catch (error) {
+      console.error("[getProductosTop] ERROR:", error);
       throw new Error(`Error al obtener productos top: ${error.message}`);
     }
   }

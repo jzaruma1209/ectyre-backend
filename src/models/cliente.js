@@ -72,8 +72,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       passwordHash: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,    // 🔑 OAuth — null para usuarios que se registran con Google
         field: "password_hash",
+      },
+      googleId: {
+        type: DataTypes.STRING(255),
+        allowNull: true,    // 🔑 OAuth — solo para usuarios de Google
+        unique: true,
+        field: "google_id",
       },
       role: {
         type: DataTypes.ENUM("cliente", "admin"),

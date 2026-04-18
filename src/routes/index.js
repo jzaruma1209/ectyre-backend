@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 
+// ─── Google OAuth 2.0 ─────────────────────────────────────────────────
+const routerAuth = require("./auth.router");
+
 // Importar routers
 const llantaRouter = require("./llanta.router");
 const clienteRouter = require("./cliente.router");
@@ -14,11 +17,12 @@ router.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Bienvenido a API Ectyre v1",
-    endpoints: ["/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/admin"]
+    endpoints: ["/auth", "/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/admin"]
   });
 });
 
 // Configurar rutas
+router.use("/auth", routerAuth);          // 🔑 Google OAuth
 router.use("/llantas", llantaRouter);
 router.use("/clientes", clienteRouter);
 router.use("/carrito", carritoRouter);

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "ectyre-api-v1-complete-collection",
     "name": "🛞 Ectyre API v1.0.2 — Colección Completa",
-    "description": "| Admin | 6 | 0 | 0 | 6 || Llantas | 7 | 4 | 0 | 3 |# 🛞 Ectyre API — Colección Completa para Postman\n\n**Versión:** 1.0.2\n**Base URL:** `http://localhost:8080/api/v1`\n**Autenticación:** Bearer Token (JWT) / Google OAuth 2.0\n\n---\n\n## 📋 Descripción General\nEctyre es una API REST para una tienda de llantas online. Permite gestionar catálogo de llantas, clientes, carrito de compras, pedidos, direcciones de entrega, y un panel de administración completo con reportes.\n\n---\n\n## 🔑 Leyenda de Seguridad\n- 🌍 **Pública** — Sin autenticación requerida\n- 🔒 **Privada** — Requiere `Authorization: Bearer <token>`\n- 👑 **Admin** — Requiere JWT + rol Admin\n- 🌍/🔒 **Mixta** — Funciona con o sin autenticación (carrito soporta sesión anónima)\n\n---\n\n## 🧪 Cómo Testear (Paso a Paso)\n\n### 1. Configurar Variables\nLa colección usa la variable `{{baseUrl}}` configurada a `http://localhost:8080/api/v1`.\nCrea un Environment en Postman con:\n- `baseUrl` = `http://localhost:8080/api/v1`\n- `token` = (se llena automáticamente al hacer Login Usuario)\n- `adminToken` = (se llena automáticamente al hacer Login Admin)\n\n### 2. Flujo Recomendado de Testing\n1. Ejecuta **Health Check** para verificar que el servidor está arriba\n2. Ejecuta **Registro** para crear un usuario\n3. Ejecuta **Login Usuario** → el token se guarda automáticamente en `{{token}}`\n4. Ejecuta **Login Admin** → el token se guarda en `{{adminToken}}`\n5. Ahora puedes probar cualquier endpoint protegido\n\n### 3. Datos del Seeder\n- Llantas: IDs 1–13\n- Marcas de vehículos: IDs 1–8\n- Admin: `admin@ectyre.com` / `Admin2026#Ectyre`\n- Usuario de prueba: Registra uno nuevo con el endpoint de Registro\n\n### 4. Errores Comunes\n- **401 Unauthorized**: Token JWT expirado o no enviado. Haz login de nuevo.\n- **403 Forbidden**: No tienes permisos de Admin. Usa `{{adminToken}}`.\n- **429 Too Many Requests**: Rate limit alcanzado. Espera unos minutos.\n- **400 Bad Request**: Revisa el body JSON enviado, campos requeridos faltantes.\n\n---\n\n## 📊 Resumen de Endpoints (43 total)\n| Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |\n|---|---|---|---|---|\n| Health Check | 2 | 2 | 0 | 0 |\n| Auth (OAuth) | 3 | 3 | 0 | 0 |\n| Clientes | 5 | 2 | 3 | 0 |\n| Llantas | 8 | 4 | 0 | 4 |\n| Vehículos | 3 | 3 | 0 | 0 |\n| Carrito | 5 | 0 | 5* | 0 |\n| Pedidos | 4 | 0 | 4 | 0 |\n| Direcciones | 4 | 0 | 4 | 0 |\n| Admin | 12 | 0 | 0 | 12 |\n| **Total** | **46** | **14** | **16** | **16** |\n\n> *El carrito acepta autenticación opcional (mixta)\n\n---\n\n*Colección generada para Ectyre API v1.0.2 — Última actualización: 2026-03-24*",
+    "description": "\n# 🛞 Ectyre API — Colección Completa para Postman\n\n**Versión:** 1.0.2\n**Base URL:** `http://localhost:8080/api/v1`\n**Autenticación:** Bearer Token (JWT)\n\n---\n\n## 📋 Descripción General\nEctyre es una API REST para una tienda de llantas online. Permite gestionar catálogo de llantas, clientes, carrito de compras, pedidos, direcciones de entrega, y un panel de administración completo con reportes.\n\n---\n\n## 🔑 Leyenda de Seguridad\n- 🌍 **Pública** — Sin autenticación requerida\n- 🔒 **Privada** — Requiere `Authorization: Bearer <token>`\n- 👑 **Admin** — Requiere JWT + rol Admin\n- 🌍/🔒 **Mixta** — Funciona con o sin autenticación (carrito soporta sesión anónima)\n\n---\n\n## 🧪 Cómo Testear (Paso a Paso)\n\n### 1. Configurar Variables\nLa colección usa la variable `{{baseUrl}}` configurada a `http://localhost:8080/api/v1`.\nCrea un Environment en Postman con:\n- `baseUrl` = `http://localhost:8080/api/v1`\n- `token` = (se llena automáticamente al hacer Login Usuario)\n- `adminToken` = (se llena automáticamente al hacer Login Admin)\n\n### 2. Flujo Recomendado de Testing\n1. Ejecuta **Health Check** para verificar que el servidor está arriba\n2. Ejecuta **Registro** para crear un usuario\n3. Ejecuta **Login Usuario** → el token se guarda automáticamente en `{{token}}`\n4. Ejecuta **Login Admin** → el token se guarda en `{{adminToken}}`\n5. Ahora puedes probar cualquier endpoint protegido\n\n### 3. Datos del Seeder\n- Llantas: IDs 1–13\n- Marcas de vehículos: IDs 1–8\n- Admin: `admin@ectyre.com` / `Admin2026#Ectyre`\n- Usuario de prueba: Registra uno nuevo con el endpoint de Registro\n\n### 4. Errores Comunes\n- **401 Unauthorized**: Token JWT expirado o no enviado. Haz login de nuevo.\n- **403 Forbidden**: No tienes permisos de Admin. Usa `{{adminToken}}`.\n- **429 Too Many Requests**: Rate limit alcanzado. Espera unos minutos.\n- **400 Bad Request**: Revisa el body JSON enviado, campos requeridos faltantes.\n\n---\n\n## 📊 Resumen de Endpoints (42 total)\n\n| Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |\n|---|---|---|---|---|\n| Health Check | 2 | 2 | 0 | 0 |\n| Clientes | 5 | 2 | 3 | 0 |\n| Llantas | 7 | 4 | 0 | 3 |\n| Vehículos | 3 | 3 | 0 | 0 |\n| Carrito | 5 | 0 | 5* | 0 |\n| Pedidos | 4 | 0 | 4 | 0 |\n| Direcciones | 4 | 0 | 4 | 0 |\n| Admin | 12 | 0 | 0 | 12 |\n| **Total** | **42** | **11** | **16** | **15** |\n\n> *El carrito acepta autenticación opcional (mixta)\n\n---\n\n*Colección generada para Ectyre API v1.0.2 — Última actualización:* 2026-04-18",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -1029,6 +1029,139 @@
                 },
                 "url": "{{baseUrl}}/admin/pedidos/1/estado",
                 "description": "👑 **ADMIN** — Cambiar el estado de un pedido.\n\n**URL Param:** Cambia `/1` por el ID del pedido.\n\n**Valores válidos para `estado`:**\n- `PENDIENTE`\n- `CONFIRMADO`\n- `EN_PREPARACION`\n- `ENVIADO`\n- `ENTREGADO`\n- `CANCELADO`\n\n**Testing:** Cambia el estado progresivamente y verifica con Tracking (como usuario) que aparezca en el historial."
+              }
+            },
+            {
+              "name": "Detalle Pedido [👑 Admin]",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/pedidos/1",
+                "description": "👑 **ADMIN** — Detalle de un pedido en el panel.\n\n**URL Param:** Cambia `/1` por el ID del pedido."
+              }
+            }
+          ]
+        },
+        {
+          "name": "🏭 Inventario",
+          "description": "Gestión de stock de llantas.",
+          "item": [
+            {
+              "name": "Actualizar Stock Llanta [👑 Admin]",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cantidad\": 5\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/admin/llantas/1/stock",
+                "description": "👑 **ADMIN** — Aumentar o disminuir stock de una llanta.\n\n**URL Param:** Cambia `/1` por el ID de la llanta."
+              }
+            }
+          ]
+        },
+        {
+          "name": "📈 Reportes",
+          "description": "Reportes de ventas y estadísticas.",
+          "item": [
+            {
+              "name": "Reporte de Ventas [👑 Admin]",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/reportes/ventas?desde=&hasta=",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "reportes",
+                    "ventas"
+                  ],
+                  "query": [
+                    {
+                      "key": "desde",
+                      "value": "",
+                      "description": "Fecha inicio YYYY-MM-DD"
+                    },
+                    {
+                      "key": "hasta",
+                      "value": "",
+                      "description": "Fecha fin YYYY-MM-DD"
+                    }
+                  ]
+                },
+                "description": "👑 **ADMIN** — Reporte de ventas en un rango de fechas."
+              }
+            },
+            {
+              "name": "Top Productos Vendidos [👑 Admin]",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/reportes/productos-top?limit=10",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "reportes",
+                    "productos-top"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "👑 **ADMIN** — Top de productos más vendidos."
+              }
+            },
+            {
+              "name": "Stats Carritos [👑 Admin]",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/stats/carritos",
+                "description": "👑 **ADMIN** — Estadísticas de carritos (abandonados, totales)."
               }
             }
           ]

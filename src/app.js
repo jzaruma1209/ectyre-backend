@@ -1,7 +1,10 @@
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
+const session = require("express-session");   // 🔑 OAuth — sesión de Passport
+const passport = require("passport");          // 🔑 OAuth — Passport
 require("dotenv").config();
+require("./config/passport");                  // 🔑 OAuth — carga la estrategia Google
 const router = require("./routes");
 const errorHandler = require("./utils/errorHandler");
 const { rateLimitAPI } = require("./middlewares/rateLimit.middleware");
@@ -78,6 +81,18 @@ app.use(cors(corsOptions));
 // ─── Rate limit global (antes de las rutas) ─────────────────────────
 // Aplicado a TODAS las rutas /api/v1
 app.use("/api/v1", rateLimitAPI);
+
+// ─── Google OAuth — Session + Passport ──────────────────────────────
+// ⚠️ ORDEN CRÍTICO: session ANTES de passport, passport ANTES del router
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ─── Rutas ─────────────────────────────────────────────────────────
 app.use("/api/v1", router);

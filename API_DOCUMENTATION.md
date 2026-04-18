@@ -491,6 +491,13 @@ Ver detalle de un cliente.
 
 ---
 
+### GET /clientes/:id/pedidos
+Historial de pedidos de un cliente específico.
+
+- **URL Params:** `id` (number)
+
+---
+
 ### PATCH /clientes/:id/toggle
 Activar o desactivar un cliente.
 
@@ -506,6 +513,13 @@ Listar todos los pedidos del sistema.
 |-------|------|-------------|
 | `page` | number | Página |
 | `estado` | string | Filtrar por estado (`PENDIENTE`, `CONFIRMADO`, `EN_PREPARACION`, `ENVIADO`, `ENTREGADO`, `CANCELADO`) |
+
+---
+
+### GET /pedidos/:id
+Obtener detalle de un pedido específico.
+
+- **URL Params:** `id` (number)
 
 ---
 
@@ -531,6 +545,45 @@ Cambiar el estado de un pedido.
 
 ---
 
+### PATCH /llantas/:id/stock
+Actualizar inventario/stock de una llanta.
+
+- **URL Params:** `id` (number)
+- **Body (JSON):**
+```json
+{
+  "cantidad": 5
+}
+```
+
+---
+
+### GET /reportes/ventas
+Reporte de ventas.
+
+**Query Params opcionales:**
+| Param | Tipo | Descripción |
+|-------|------|-------------|
+| `desde` | string | Fecha inicio YYYY-MM-DD |
+| `hasta` | string | Fecha fin YYYY-MM-DD |
+
+---
+
+### GET /reportes/productos-top
+Top productos más vendidos.
+
+**Query Params opcionales:**
+| Param | Tipo | Descripción |
+|-------|------|-------------|
+| `limit` | number | Cantidad de productos (default: 10) |
+
+---
+
+### GET /stats/carritos
+Estadísticas de carritos actuales.
+
+---
+
 ## 📊 Resumen de Endpoints
 
 | Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |
@@ -541,8 +594,8 @@ Cambiar el estado de un pedido.
 | Carrito | 5 | 0 | 5* | 0 |
 | Pedidos | 4 | 0 | 4 | 0 |
 | Direcciones | 4 | 0 | 4 | 0 |
-| Admin | 6 | 0 | 0 | 6 |
-| **Total** | **34** | **9** | **16** | **9** |
+| Admin | 12 | 0 | 0 | 12 |
+| **Total** | **40** | **9** | **16** | **15** |
 
 > *El carrito acepta autenticación opcional (también funciona sin token como sesión anónima)
 

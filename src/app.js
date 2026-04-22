@@ -16,7 +16,8 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "http://192.168.1.7:5173",
   "http://172.16.0.1:5173",
-  "https://ectyre.com"  // Origen de producción original
+  "https://ectyre.com", // Origen de producción original
+  "https://ectyresa-com.vercel.app" // Origen de producción de Vercel
 ];
 
 if (process.env.CORS_ORIGIN) {

@@ -32,7 +32,7 @@ const getLlantaById = catchError(async (req, res) => {
   });
 });
 
-// Buscar por medida
+// Buscar por medida exacta
 const buscarPorMedida = catchError(async (req, res) => {
   const { ancho, perfil, rin } = req.query;
 
@@ -80,6 +80,74 @@ const buscarPorVehiculo = catchError(async (req, res) => {
   });
 });
 
+/**
+ * GET /llantas/buscar-general?q=texto
+ *
+ * Búsqueda unificada:
+ *  - Detecta medida tipo 185/65R14 (+ marca opcional)
+ *  - Busca por modelo, descripción, marca
+ *
+ * Devuelve: { resultados, recomendaciones, tipo, parsedMedida, marcaBuscada }
+ */
+const buscarGeneral = catchError(async (req, res) => {
+  const { q } = req.query;
+
+  if (!q || !q.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Se requiere el parámetro q",
+    });
+  }
+
+  const { resultados, tipo, parsedMedida, marcaBuscada } =
+    await llantaService.buscarGeneral(q);
+
+  // Calcular rin para recomendaciones
+  const rinParaRecomendar = parsedMedida?.rin
+    || (resultados[0]?.rin ?? null);
+
+  const idsResultados = resultados.map((l) => l.idLlanta);
+
+  const recomendaciones = await llantaService.obtenerRecomendaciones({
+    rin: rinParaRecomendar,
+    excluirIds: idsResultados,
+    limit: 8,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Búsqueda completada",
+    data: {
+      resultados,
+      recomendaciones,
+      tipo,
+      parsedMedida,
+      marcaBuscada,
+      totalResultados: resultados.length,
+    },
+  });
+});
+
+/**
+ * GET /llantas/recomendaciones?rin=14&excluir=1,2,3
+ */
+const obtenerRecomendaciones = catchError(async (req, res) => {
+  const { rin, excluir } = req.query;
+  const excluirIds = excluir ? excluir.split(",").map(Number) : [];
+
+  const recomendaciones = await llantaService.obtenerRecomendaciones({
+    rin: rin ? parseInt(rin) : null,
+    excluirIds,
+    limit: 8,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Recomendaciones obtenidas",
+    data: recomendaciones,
+  });
+});
+
 // Crear llanta (Admin)
 const createLlanta = catchError(async (req, res) => {
   const llanta = await llantaService.createLlanta(req.body);
@@ -119,6 +187,8 @@ module.exports = {
   getLlantaById,
   buscarPorMedida,
   buscarPorVehiculo,
+  buscarGeneral,
+  obtenerRecomendaciones,
   createLlanta,
   updateLlanta,
   deleteLlanta,

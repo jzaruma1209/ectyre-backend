@@ -4,6 +4,8 @@ const {
   getLlantaById,
   buscarPorMedida,
   buscarPorVehiculo,
+  buscarGeneral,
+  obtenerRecomendaciones,
   createLlanta,
   updateLlanta,
   deleteLlanta,
@@ -16,15 +18,17 @@ const {
 
 const router = express.Router();
 
-// Rutas públicas
-router.get("/", getAllLlantas); // 🌍 Público
-router.get("/buscar-medida", buscarPorMedida); // 🌍 Público
-router.get("/buscar-vehiculo", buscarPorVehiculo); // 🌍 Público
-router.get("/:id", validateId, getLlantaById); // 🌍 Público
+// ── Rutas públicas ──────────────────────────────────────────
+router.get("/", getAllLlantas);                          // 🌍 Catálogo general
+router.get("/buscar-medida", buscarPorMedida);           // 🌍 Búsqueda por ancho/perfil/rin
+router.get("/buscar-vehiculo", buscarPorVehiculo);       // 🌍 Búsqueda por vehículo
+router.get("/buscar-general", buscarGeneral);            // 🌍 Búsqueda texto libre (barra de búsqueda + selector)
+router.get("/recomendaciones", obtenerRecomendaciones);  // 🌍 Recomendaciones por rin
+router.get("/:id", validateId, getLlantaById);          // 🌍 Detalle por ID
 
-// Rutas protegidas (Admin)
-router.post("/", verifyJWT, validateLlantaData, createLlanta); // 🔒 Admin
-router.put("/:id", verifyJWT, validateId, validateLlantaData, updateLlanta); // 🔒 Admin
-router.delete("/:id", verifyJWT, validateId, deleteLlanta); // 🔒 Admin
+// ── Rutas protegidas (Admin) ────────────────────────────────
+router.post("/", verifyJWT, validateLlantaData, createLlanta);
+router.put("/:id", verifyJWT, validateId, validateLlantaData, updateLlanta);
+router.delete("/:id", verifyJWT, validateId, deleteLlanta);
 
 module.exports = router;

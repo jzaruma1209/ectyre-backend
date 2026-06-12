@@ -9,6 +9,7 @@
   <img src="https://img.shields.io/badge/Sequelize-6.37-52B0E7?style=for-the-badge&logo=sequelize&logoColor=white"/>
   <img src="https://img.shields.io/badge/JWT-Secure-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white"/>
   <img src="https://img.shields.io/badge/Jest-Testing-C21325?style=for-the-badge&logo=jest&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Cloudinary-Integrado-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white"/>
 </p>
 
 ---
@@ -69,8 +70,11 @@ El proyecto utiliza un stack moderno basado en JavaScript/TypeScript para el ent
   - `Cors` (Intercambio de recursos de origen cruzado)
   - `express-rate-limit` (Protección contra fuerza bruta y DDoS)
   - `bcrypt` (Hashing de passwords)
+- **Autenticación:** JWT (jsonwebtoken) + Google OAuth 2.0 (Passport.js)
 - **Validaciones:** `express-validator` (Sanitización y validación de inputs)
-- **Testing:** Jest + Supertest (Pruebas unitarias y de integración automáticas)
+- **Almacenamiento de Imágenes:** Cloudinary via `multer-storage-cloudinary`
+- **Subida de Archivos:** `multer` (multipart/form-data)
+- **Testing:** Jest + Supertest (Pruebas de integración automáticas)
 
 ---
 
@@ -79,9 +83,10 @@ El proyecto utiliza un stack moderno basado en JavaScript/TypeScript para el ent
 Para ejecutar este proyecto en tu entorno local, asegúrate de tener instalado:
 
 - **Node.js**: v20.0.0 o superior.
-- **npm**: v10.0.0 o superior (usualmente viene con Node).
-- **PostgreSQL**: v13.0 o superior funcionando localmente o un clúster en la nube.
+- **npm**: v10.0.0 o superior.
+- **PostgreSQL**: v13.0 o superior.
 - **Git**: Para clonar y manejar el repositorio.
+- **Puerto**: El servidor corre en `8080` (configurable via `PORT` en `.env`).
 
 ---
 
@@ -105,9 +110,9 @@ Crea tu archivo `.env` basado en el archivo de ejemplo proporcionado:
 ```bash
 cp .env.example .env
 ```
-Abre el archivo `.env` y ajusta las credenciales (especialmente las de tu base de datos local):
+Abre el archivo `.env` y ajusta las credenciales:
 ```env
-PORT=3000
+PORT=8080
 NODE_ENV=development
 
 # Base de datos
@@ -119,6 +124,21 @@ DB_PASS=tu_password_aqui
 
 # Seguridad JWT
 TOKEN_SECRET=tu_mega_secreta_clave_jwt_que_nadie_sabe
+TOKEN_EXPIRES_IN=7d
+
+# Google OAuth 2.0
+GOOGLE_CLIENT_ID=tu_client_id
+GOOGLE_CLIENT_SECRET=tu_client_secret
+SESSION_SECRET=una_cadena_aleatoria_segura
+CLIENT_URL=http://localhost:5173
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
+
+# CORS (orígenes adicionales separados por coma)
+CORS_ORIGIN=https://ectyre.com
 ```
 
 ### 4. Configurar la Base de Datos
@@ -143,17 +163,22 @@ Para producción:
 ```bash
 npm start
 ```
-Si todo salió bien, verás en la consola: `🚀 Servidor corriendo en el puerto 3000`.
+Si todo salió bien, verás en la consola: `🚀 Servidor corriendo en el puerto 8080`.
 
 ---
 
 ## 🚦 Scripts Disponibles (`package.json`)
 
-- `npm run dev`: Inicia el servidor de desarrollo con `nodemon`.
-- `npm start`: Inicia el servidor de producción.
-- `npm test`: Ejecuta toda la suite de pruebas unitarias y de integración con Jest.
-- `npm run test:watch`: Ejecuta las pruebas en modo observador.
-- `npm run db:create`, `db:migrate`, `db:seed`: Scripts para gestionar la base de datos con Sequelize CLI.
+- `npm run dev` — Servidor de desarrollo con `nodemon` (hot-reload).
+- `npm start` — Servidor de producción (ejecuta migraciones automáticas en Vercel via `prestart`).
+- `npm test` — Suite completa: `pretest` (reset migraciones BD test) → `jest --detectOpenHandles`.
+- `npm run test:watch` — Jest en modo observador.
+- `npm run db:create` — Crear BD con Sequelize CLI.
+- `npm run db:migrate` — Ejecutar migraciones pendientes.
+- `npm run db:migrate:prod` — Migraciones en producción (`NODE_ENV=production`).
+- `npm run db:seed` — Poblar BD con datos iniciales (8 seeders).
+- `npm run db:seed:prod` — Seeders en producción.
+- `npm run reset:migrate` — Revertir y re-ejecutar todas las migraciones.
 
 ---
 
@@ -163,16 +188,16 @@ El proyecto sigue una arquitectura MVC fluida y modular bajo el directorio `src/
 
 ```text
 src/
-├── config/         # Configuraciones de BD y variables globales
-├── controllers/    # Controladores (Manejo de Requests y Responses)
-├── middlewares/    # Middlewares de Express (Auth, Roles, Validaciones)
-├── migrations/     # Scripts de Sequelize para crear/modificar tablas
-├── models/         # Definición de modelos de datos Sequelize
-├── routes/         # Definición de Rutas API (Endpoints)
-├── seeders/        # Datos predefinidos para poblar la base de datos
-├── services/       # Lógica de Negocio y comunicación con BD
-├── tests/          # Suite de testing (Jest/Supertest)
-├── utils/          # Funciones utilitarias (Manejo de errores, helpers)
+├── config/         # 3 archivos — DB, Cloudinary, Passport (Google OAuth)
+├── controllers/    # 8 controladores (admin, carrito, cliente, direccion, imagen, llanta, pedido, vehiculo)
+├── middlewares/    # 5 middlewares (auth, rateLimit, upload, validation, index barrel)
+├── migrations/     # 16 migraciones (15 tablas + 1 alter column googleId)
+├── models/         # 15 modelos Sequelize (incl. index.js con asociaciones)
+├── routes/         # 10 routers (index + auth, admin, carrito, cliente, direccion, imagen, llanta, pedido, vehiculo)
+├── seeders/        # 8 seeders (marcas, llantas, imagenes, vehiculos, compatibilidades, metodos pago, clientes)
+├── services/       # 8 servicios (business logic, clases singleton)
+├── tests/          # 5 archivos (carrito, cliente, llanta, pedido + testMigrate helper)
+├── utils/          # 4 utilidades (catchError, connection, customErrors, errorHandler)
 ├── app.js          # Configuración principal y middlewares de Express
 └── server.js       # Entry point principal (Arranque del servidor http)
 ```
@@ -181,13 +206,18 @@ src/
 
 ## 📚 Documentación y Guías de Integración
 
-Para facilitar el trabajo a los desarrolladores o **Agentes de Frontend y Testing**, hemos preparado documentos maestros específicos:
-- 📖 [Documentación Técnica Genérica (API_DOCUMENTATION.md)](./API_DOCUMENTATION.md)
-- 🤝 [Guía de Integración Frontend (GUIA_INTEGRACION_FRONTEND.md)](./GUIA_INTEGRACION_FRONTEND.md) *(Especial para Cards de Llantas y Subida de Archivos/imágenes).*
-- 🔐 [Guía de Autenticación Frontend (GUIA_AUTH_FRONTEND.md)](./GUIA_AUTH_FRONTEND.md) *(Flujo de conexión exacto para formularios de Login, Registro y Perfiles).*
+Para facilitar el trabajo a los desarrolladores, hemos preparado documentación específica:
+
+| Documento | Propósito |
+|-----------|-----------|
+| 📖 [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | Documentación técnica detallada de todos los endpoints |
+| 🧪 [POSTMAN_TESTING_GUIDE.md](./POSTMAN_TESTING_GUIDE.md) | Guía completa para testing con Postman |
+| 🤖 [AGENTS.md](./AGENTS.md) | Instrucciones para agentes de IA (convenciones, estructura, comandos) |
+| 🚀 [DEPLOYMENT.md](./DEPLOYMENT.md) | Guía de despliegue a producción |
+| 📋 [CHANGELOG.md](./CHANGELOG.md) | Historial de cambios del proyecto |
 
 También puedes importar la colección integral de pruebas en tu entorno:
-- 🚀 **[Colección de Postman (.json)](./Ectyre_API_Postman_Collection.json)** (Esta es la fuente definitiva de la verdad para conocer payloads, métodos e integraciones).
+- 🚀 **[Colección de Postman (.json)](./Ectyre_API_Postman_Collection.json)** (Fuente definitiva de la verdad — payloads, métodos y flujos completos).
 
 ---
 
@@ -196,22 +226,65 @@ También puedes importar la colección integral de pruebas en tu entorno:
 La base de la API está en `/api/v1`. Para consumir endpoints protegidos, se debe enviar el header: `Authorization: Bearer <TOKEN>`.
 
 ### 🌍 Públicos
-- `GET /` - Health check.
-- `GET /api/v1/llantas` - Obtener catálogo de llantas.
-- `GET /api/v1/vehiculos/marcas` - Obtener marcas de vehículos.
+- `GET /` - Health check / bienvenida con lista de endpoints.
+- `GET /health` - Estado del servidor (`{ success, status, timestamp }`).
+- `GET /api/v1/auth/google` - Iniciar sesión con Google OAuth 2.0.
+- `GET /api/v1/auth/google/callback` - Callback de Google OAuth.
+- `GET /api/v1/llantas` - Catálogo completo (paginación y filtros: `?page=&marca=&ancho=&perfil=&rin=&destacado=`).
+- `GET /api/v1/llantas/buscar-medida` - Búsqueda por medida (`?ancho=&perfil=&rin=`).
+- `GET /api/v1/llantas/buscar-vehiculo` - Búsqueda por vehículo (`?marca=&modelo=&anio=`).
+- `GET /api/v1/llantas/buscar-general` - Búsqueda por texto libre (barra de búsqueda).
+- `GET /api/v1/llantas/recomendaciones` - Recomendaciones por rin.
+- `GET /api/v1/llantas/:id` - Detalle de llanta por ID.
+- `GET /api/v1/vehiculos/marcas` - Listar marcas de vehículos activas.
+- `GET /api/v1/vehiculos/marcas/completo` - Marcas con modelos anidados.
+- `GET /api/v1/vehiculos/marcas/:idMarca/modelos` - Modelos de una marca específica.
 
-### 🔒 Clientes (Requieren Autenticación)
-- `POST /api/v1/clientes/registro` - Registrar nuevo cliente.
-- `POST /api/v1/clientes/login` - Autenticarse e iniciar sesión.
+### 🔒 Clientes (Requieren Autenticación JWT)
+- `POST /api/v1/clientes/registro` - Registrar nuevo cliente (rate limit: 3/h).
+- `POST /api/v1/clientes/login` - Iniciar sesión (rate limit: 5/15min).
+- `POST /api/v1/clientes/logout` - Cerrar sesión.
 - `GET /api/v1/clientes/perfil` - Obtener datos del perfil propio.
-- `GET /api/v1/carrito` - Obtener carrito actual.
-- `POST /api/v1/pedidos/checkout` - Procesar la compra del carrito actual.
-- `GET /api/v1/pedidos` - Ver historial de mis pedidos.
+- `PUT /api/v1/clientes/perfil` - Actualizar datos del perfil propio.
 
-### 🛡️ Administradores (Requiere Rol Admin)
-- `GET /api/v1/admin/dashboard` - Obtener analíticas del sistema.
-- `POST /api/v1/admin/llantas` - Crear un producto en inventario.
-- `PUT /api/v1/admin/pedidos/:id/status` - Actualizar el estado logístico de un pedido.
+### 🛒 Carrito (Auth Opcional — JWT o sesión anónima)
+- `GET /api/v1/carrito` - Ver contenido del carrito.
+- `POST /api/v1/carrito/agregar` - Agregar ítem al carrito.
+- `PUT /api/v1/carrito/actualizar/:id` - Actualizar cantidad de un ítem.
+- `DELETE /api/v1/carrito/eliminar/:id` - Eliminar ítem del carrito.
+- `DELETE /api/v1/carrito/vaciar` - Vaciar carrito completo.
+
+### 📦 Pedidos (Requieren Autenticación JWT)
+- `POST /api/v1/pedidos/checkout` - Procesar la compra del carrito actual.
+- `GET /api/v1/pedidos` - Historial de pedidos del cliente.
+- `GET /api/v1/pedidos/:id` - Detalle de un pedido específico.
+- `GET /api/v1/pedidos/:id/tracking` - Tracking del estado de envío.
+
+### 🏠 Direcciones (Requieren Autenticación JWT)
+- `GET /api/v1/direcciones` - Listar direcciones del cliente.
+- `POST /api/v1/direcciones` - Crear nueva dirección de entrega.
+- `PUT /api/v1/direcciones/:id` - Actualizar una dirección.
+- `DELETE /api/v1/direcciones/:id` - Eliminar una dirección.
+
+### 🛡️ Administradores (Requiere JWT + Rol Admin)
+- `GET /api/v1/admin/dashboard` - Métricas del sistema.
+- `GET /api/v1/admin/clientes` - Listar clientes (`?page=&limit=&search=`).
+- `GET /api/v1/admin/clientes/:id` - Detalle de un cliente.
+- `GET /api/v1/admin/clientes/:id/pedidos` - Pedidos de un cliente.
+- `PATCH /api/v1/admin/clientes/:id/toggle` - Activar/desactivar cliente.
+- `GET /api/v1/admin/pedidos` - Listar todos los pedidos (`?page=&estado=`).
+- `GET /api/v1/admin/pedidos/:id` - Detalle de un pedido.
+- `PATCH /api/v1/admin/pedidos/:id/estado` - Cambiar estado del pedido.
+- `PATCH /api/v1/admin/llantas/:id/stock` - Actualizar stock de una llanta.
+- `POST /api/v1/admin/llantas` - Crear llanta (JSON o `multipart/form-data` con imagen).
+- `POST /api/v1/admin/llantas/:id/imagenes` - Subir 1 imagen a una llanta.
+- `POST /api/v1/admin/llantas/:id/imagenes/multiple` - Subir múltiples imágenes a una llanta.
+- `GET /api/v1/admin/llantas/:id/imagenes` - Ver imágenes de una llanta.
+- `PATCH /api/v1/admin/llantas/:id/imagenes/:idImagen/principal` - Establecer imagen principal.
+- `DELETE /api/v1/admin/imagenes/:idImagen` - Eliminar una imagen.
+- `GET /api/v1/admin/reportes/ventas` - Reporte de ventas (`?desde=&hasta=`).
+- `GET /api/v1/admin/reportes/productos-top` - Top productos más vendidos.
+- `GET /api/v1/admin/stats/carritos` - Estadísticas de carritos actuales.
 
 *(Para ver la documentación técnica detallada de cada endpoint, puedes observar e importar el archivo Postman adjunto en el proyecto).*
 
@@ -219,14 +292,16 @@ La base de la API está en `/api/v1`. Para consumir endpoints protegidos, se deb
 
 ## 🧪 Pruebas y Calidad (Testing)
 
-El sistema cuenta con una robusta suite de pruebas end-to-end e integración usando **Jest** y **Supertest**. 
-Al correr las pruebas, se crea automáticamente una base de datos temporal, ejecuta migraciones, corre todos los tests y luego se limpia la información.
+El sistema cuenta con una robusta suite de pruebas de integración usando **Jest** y **Supertest**.
+El comando `pretest` ejecuta `reset:migrate` (revierte y re-ejecuta todas las migraciones en la BD de test), luego Jest corre todos los tests.
 
 ```bash
 npm test
 ```
 
-Módulos testeados actualmente: Auth, Clientes, Catálogo, Llantas, Carrito de Compras, Pedidos.
+Módulos testeados actualmente: Clientes, Llantas, Carrito de Compras, Pedidos (5 archivos de test).
+
+La integración continua vía **GitHub Actions** (`.github/workflows/ci.yml`) verifica en cada push/PR a `main`/`develop` que el servidor cargue correctamente con `node -e "require('./src/app.js')"`.
 
 ---
 

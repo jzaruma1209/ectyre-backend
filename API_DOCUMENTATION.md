@@ -1,8 +1,8 @@
 # 📖 API Ectyre — Documentación de Endpoints
 
 > **Base URL (Local):** `http://localhost:8080/api/v1`  
-> **Base URL (Producción):** `https://tu-dominio.vercel.app/api/v1`  
-> **Versión:** 1.0.0  
+> **Base URL (Producción):** `https://ectyre-backend.vercel.app/api/v1`  
+> **Versión:** 1.0.2  
 > **Autenticación:** Bearer Token (JWT)
 
 ---
@@ -37,19 +37,29 @@ Registrar un nuevo cliente.
 **Body (JSON):**
 ```json
 {
-  "nombre": "Juan Pérez",
+  "tipoIdentificacion": "CEDULA",
+  "numeroIdentificacion": "0959401332",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
   "email": "juan@example.com",
-  "password": "MiPassword123",
-  "telefono": "0991234567"
+  "telefono": "0991234567",
+  "password": "MiPassword123"
 }
 ```
+
+**Validaciones:**
+- `tipoIdentificacion`: `CEDULA | RUC | PASAPORTE`
+- `numeroIdentificacion`: 5-20 caracteres
+- `nombres`: 2-100 caracteres
+- `apellidos`: 2-100 caracteres
+- `password`: mínimo 6 caracteres
 
 **Respuesta 201:**
 ```json
 {
   "success": true,
   "message": "Cliente registrado correctamente",
-  "data": { "id": 1, "nombre": "Juan Pérez", "email": "juan@example.com" }
+  "data": { "id": 1, "nombres": "Juan", "apellidos": "Pérez", "email": "juan@example.com" }
 }
 ```
 
@@ -102,8 +112,9 @@ Obtener perfil del cliente autenticado.
 {
   "success": true,
   "data": {
-    "id": 1,
-    "nombre": "Juan Pérez",
+    "idCliente": 1,
+    "nombres": "Juan",
+    "apellidos": "Pérez",
     "email": "juan@example.com",
     "telefono": "0991234567",
     "activo": true
@@ -143,6 +154,11 @@ Listar todas las llantas con paginación y filtros.
 | `marca` | string | Filtrar por marca |
 | `precio_min` | number | Precio mínimo |
 | `precio_max` | number | Precio máximo |
+| `destacado` | boolean | Solo llantas destacadas |
+| `idMarca` | number | Filtrar por ID de marca |
+| `ancho` | number | Filtrar por ancho |
+| `perfil` | number | Filtrar por perfil |
+| `rin` | number | Filtrar por rin |
 
 ---
 
@@ -183,8 +199,8 @@ Obtener detalle de una llanta por ID.
 
 ---
 
-### POST /
-Crear una nueva llanta.
+### POST / (JSON)
+Crear una nueva llanta (sin imagen).
 
 - **Auth:** 👑 Admin (JWT + rol Admin)
 
@@ -202,6 +218,27 @@ Crear una nueva llanta.
   "imagen_url": "https://..."
 }
 ```
+
+---
+
+### POST / (con imagen)
+Crear llanta con imagen — usa `multipart/form-data`.
+
+- **Auth:** 👑 Admin
+- **Content-Type:** `multipart/form-data`
+
+**Campos del form:**
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `imagen` | File | Archivo .jpg/.jpeg/.png/.webp |
+| `idMarca` | number | ID de la marca |
+| `modelo` | string | Nombre del modelo |
+| `ancho` | number | Ancho en mm |
+| `perfil` | number | Perfil |
+| `rin` | number | Rin en pulgadas |
+| `precio` | decimal | Precio de venta |
+| `stock` | integer | Unidades en inventario |
+| `descripcion` | string | Descripción opcional |
 
 ---
 
@@ -589,13 +626,13 @@ Estadísticas de carritos actuales.
 | Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |
 |--------|-------|------------|----------------|---------|
 | Clientes | 5 | 2 | 3 | 0 |
-| Llantas | 7 | 4 | 0 | 3 |
+| Llantas | 8 | 4 | 0 | 4 |
 | Vehículos | 3 | 3 | 0 | 0 |
 | Carrito | 5 | 0 | 5* | 0 |
 | Pedidos | 4 | 0 | 4 | 0 |
 | Direcciones | 4 | 0 | 4 | 0 |
-| Admin | 12 | 0 | 0 | 12 |
-| **Total** | **40** | **9** | **16** | **15** |
+| Admin | 14 | 0 | 0 | 14 |
+| **Total** | **43** | **9** | **16** | **18** |
 
 > *El carrito acepta autenticación opcional (también funciona sin token como sesión anónima)
 
@@ -603,6 +640,7 @@ Estadísticas de carritos actuales.
 
 ## 🔐 Cómo Autenticarse
 
+### JWT (Email/Password)
 1. Llamar a `POST /api/v1/clientes/login` con email y password
 2. Copiar el `token` de la respuesta
 3. Agregar en cada request protegido el header:
@@ -610,6 +648,12 @@ Estadísticas de carritos actuales.
    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
 
+### Google OAuth 2.0
+1. Abrir en el navegador: `GET /api/v1/auth/google`
+2. Seleccionar cuenta de Google
+3. Google redirige a `{CLIENT_URL}/auth/callback?token=...`
+4. Usar el token JWT de la URL para llamadas autenticadas
+
 ---
 
-*Documentación generada automáticamente · Ectyre API v1.0.0*
+Ectyre API v1.0.2 · Última actualización: 2026-05-30

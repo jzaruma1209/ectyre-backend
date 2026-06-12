@@ -6,6 +6,19 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
 
+## [1.0.2] — 2026-05-30
+
+### Added
+- ☁️ **Integración Cloudinary**: Subida de imágenes para llantas desde el panel admin. Endpoint `POST /api/v1/admin/llantas` ahora acepta `multipart/form-data` con campo `imagen`.
+- 🖼️ **Endpoint imagen llanta**: El endpoint `PUT /api/v1/admin/llantas/:id` también acepta actualización de imagen.
+- 📋 **Campo imagen_url**: El modelo Llanta guarda automáticamente la URL pública de Cloudinary.
+
+### Changed
+- 🔄 **Colección Postman**: Actualizada a v1.0.2 con 43 endpoints documentados.
+- 👤 **Registro de clientes**: El payload ahora incluye `tipoIdentificacion`, `numeroIdentificacion`, `nombres`, `apellidos` (en lugar de un campo `nombre` genérico).
+
+---
+
 ## [1.0.1] — 2026-03-23
 
 ### Fixed

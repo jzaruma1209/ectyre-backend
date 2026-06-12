@@ -35,13 +35,18 @@ class LlantaService {
     if (filters.perfil) where.perfil = filters.perfil;
     if (filters.rin) where.rin = filters.rin;
 
+    /* return Llanta.findAll({
+       where,
+       include: defaultInclude,
+       order: [
+         ["destacado", "DESC"],
+         ["createdAt", "DESC"],
+       ],
+     }); */
     return Llanta.findAll({
       where,
       include: defaultInclude,
-      order: [
-        ["destacado", "DESC"],
-        ["createdAt", "DESC"],
-      ],
+      order: [["idLlanta", "ASC"]],
     });
   }
 
@@ -134,20 +139,20 @@ class LlantaService {
 
       const includeConMarca = tieneMarca
         ? [
-            {
-              model: MarcaLlanta,
-              as: "marca",
-              attributes: ["idMarca", "nombre", "logoUrl"],
-              where: { nombre: { [Op.iLike]: `%${restoQuery}%` } },
-              required: true,
-            },
-            {
-              model: ImagenLlanta,
-              as: "imagenes",
-              where: { tipoImagen: "PRINCIPAL" },
-              required: false,
-            },
-          ]
+          {
+            model: MarcaLlanta,
+            as: "marca",
+            attributes: ["idMarca", "nombre", "logoUrl"],
+            where: { nombre: { [Op.iLike]: `%${restoQuery}%` } },
+            required: true,
+          },
+          {
+            model: ImagenLlanta,
+            as: "imagenes",
+            where: { tipoImagen: "PRINCIPAL" },
+            required: false,
+          },
+        ]
         : defaultInclude;
 
       const resultados = await Llanta.findAll({

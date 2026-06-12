@@ -1,114 +1,167 @@
 const fs = require('fs');
-const filepath = 'Ectyre_API_Postman_Collection.json';
-const doc = JSON.parse(fs.readFileSync(filepath, 'utf8'));
 
-// Find "👑 Admin" module
-const adminModule = doc.item.find(i => i.name === '👑 Admin');
-if (!adminModule) throw new Error('Admin module not found');
+const postmanFile = './ectyre_API_Postman_Collection.json';
+const data = JSON.parse(fs.readFileSync(postmanFile, 'utf8'));
 
-// 1. Add "Detalle Pedido [👑 Admin]" to "📦 Gestión Pedidos"
-const gestionPedidos = adminModule.item.find(i => i.name === '📦 Gestión Pedidos');
-if (gestionPedidos) {
-  const detalleExists = gestionPedidos.item.find(i => i.name === 'Detalle Pedido [👑 Admin]');
-  if (!detalleExists) {
-    gestionPedidos.item.push({
-      name: "Detalle Pedido [👑 Admin]",
-      request: {
-        method: "GET",
-        header: [{ key: "Authorization", value: "Bearer {{adminToken}}" }],
-        url: "{{baseUrl}}/admin/pedidos/1",
-        description: "👑 **ADMIN** — Detalle de un pedido en el panel.\n\n**URL Param:** Cambia `/1` por el ID del pedido."
+// Find folders
+const llantasFolder = data.item.find(i => i.name === '🛞 Llantas');
+const adminFolder = data.item.find(i => i.name === '👑 Admin');
+
+if (llantasFolder) {
+  const hasBuscarGeneral = llantasFolder.item.some(i => i.name.includes("Buscar General"));
+  if (!hasBuscarGeneral) {
+    llantasFolder.item.splice(4, 0, {
+      "name": "Buscar General [🌍 Pública]",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/llantas/buscar-general?search=Michelin&page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["llantas", "buscar-general"],
+          "query": [
+            { "key": "search", "value": "Michelin", "description": "Texto de búsqueda" },
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        },
+        "description": "🌍 **PÚBLICA** — Buscar llantas por texto libre (marca, modelo, descripción)."
+      }
+    });
+  }
+
+  const hasRecomendaciones = llantasFolder.item.some(i => i.name.includes("Recomendaciones"));
+  if (!hasRecomendaciones) {
+    llantasFolder.item.splice(5, 0, {
+      "name": "Recomendaciones [🌍 Pública]",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/llantas/recomendaciones?rin=16",
+          "host": ["{{baseUrl}}"],
+          "path": ["llantas", "recomendaciones"],
+          "query": [
+            { "key": "rin", "value": "16", "description": "Rin en pulgadas" }
+          ]
+        },
+        "description": "🌍 **PÚBLICA** — Obtener recomendaciones de llantas basadas en un rin."
       }
     });
   }
 }
 
-// 2. Add Inventario group if not exists
-let inventarioGroup = adminModule.item.find(i => i.name === '🏭 Inventario');
-if (!inventarioGroup) {
-  inventarioGroup = {
-    name: "🏭 Inventario",
-    description: "Gestión de stock de llantas.",
-    item: []
-  };
-  adminModule.item.push(inventarioGroup);
-}
-const stockExists = inventarioGroup.item.find(i => i.name === 'Actualizar Stock Llanta [👑 Admin]');
-if (!stockExists) {
-  inventarioGroup.item.push({
-    name: "Actualizar Stock Llanta [👑 Admin]",
-    request: {
-      method: "PATCH",
-      header: [
-        { key: "Authorization", value: "Bearer {{adminToken}}" },
-        { key: "Content-Type", value: "application/json" }
-      ],
-      body: { mode: "raw", raw: "{\n  \"cantidad\": 5\n}", options: { raw: { language: "json" } } },
-      url: "{{baseUrl}}/admin/llantas/1/stock",
-      description: "👑 **ADMIN** — Aumentar o disminuir stock de una llanta.\n\n**URL Param:** Cambia `/1` por el ID de la llanta."
-    }
-  });
+if (adminFolder) {
+  const hasImagenesFolder = adminFolder.item.some(i => i.name.includes("Imágenes"));
+  if (!hasImagenesFolder) {
+    adminFolder.item.push({
+      "name": "🖼️ Gestión Imágenes",
+      "description": "Gestión de imágenes de llantas (Cloudinary).",
+      "item": [
+        {
+          "name": "Obtener Imágenes de Llanta [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/llantas/1/imagenes",
+            "description": "🌍 **PÚBLICA** — Obtener las imágenes asociadas a una llanta."
+          }
+        },
+        {
+          "name": "Subir Imagen Única [👑 Admin - form-data]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "imagen", "type": "file", "src": "", "description": "Archivo de imagen" },
+                { "key": "tipoImagen", "value": "DETALLE", "type": "text", "description": "PRINCIPAL, LATERAL, DETALLE" }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/llantas/1/imagenes",
+            "description": "👑 **ADMIN** — Sube una imagen para una llanta a Cloudinary."
+          }
+        },
+        {
+          "name": "Subir Múltiples Imágenes [👑 Admin - form-data]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "imagenes", "type": "file", "src": "", "description": "Múltiples archivos" }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/llantas/1/imagenes/multiple",
+            "description": "👑 **ADMIN** — Sube hasta 5 imágenes de una sola vez."
+          }
+        },
+        {
+          "name": "Establecer Imagen Principal [👑 Admin]",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/llantas/1/imagenes/1/principal",
+            "description": "👑 **ADMIN** — Establece una imagen como la principal de la llanta."
+          }
+        },
+        {
+          "name": "Eliminar Imagen [👑 Admin]",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/imagenes/1",
+            "description": "👑 **ADMIN** — Elimina una imagen de la base de datos y de Cloudinary."
+          }
+        }
+      ]
+    });
+  }
 }
 
-// 3. Add Reportes group if not exists
-let reportesGroup = adminModule.item.find(i => i.name === '📈 Reportes');
-if (!reportesGroup) {
-  reportesGroup = {
-    name: "📈 Reportes",
-    description: "Reportes de ventas y estadísticas.",
-    item: []
-  };
-  adminModule.item.push(reportesGroup);
-}
-
-if (!reportesGroup.item.find(i => i.name === 'Reporte de Ventas [👑 Admin]')) {
-  reportesGroup.item.push({
-    name: "Reporte de Ventas [👑 Admin]",
-    request: {
-      method: "GET",
-      header: [{ key: "Authorization", value: "Bearer {{adminToken}}" }],
-      url: {
-        raw: "{{baseUrl}}/admin/reportes/ventas?desde=&hasta=",
-        host: ["{{baseUrl}}"],
-        path: ["admin", "reportes", "ventas"],
-        query: [
-          { key: "desde", value: "", description: "Fecha inicio YYYY-MM-DD" },
-          { key: "hasta", value: "", description: "Fecha fin YYYY-MM-DD" }
-        ]
+// Check for Auth folder
+const hasAuthFolder = data.item.some(i => i.name === '🔑 Auth (Google)');
+if (!hasAuthFolder) {
+  data.item.splice(1, 0, {
+    "name": "🔑 Auth (Google)",
+    "description": "Endpoints para autenticación con Google OAuth 2.0. Nota: Se deben probar desde el navegador para completar el flujo de redirección.",
+    "item": [
+      {
+        "name": "Login con Google [🌍 Pública]",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": "{{baseUrl}}/auth/google",
+          "description": "🌍 **PÚBLICA** — Inicia el flujo de OAuth2 con Google. Se debe acceder desde el navegador."
+        }
       },
-      description: "👑 **ADMIN** — Reporte de ventas en un rango de fechas."
-    }
-  });
-}
-
-if (!reportesGroup.item.find(i => i.name === 'Top Productos Vendidos [👑 Admin]')) {
-  reportesGroup.item.push({
-    name: "Top Productos Vendidos [👑 Admin]",
-    request: {
-      method: "GET",
-      header: [{ key: "Authorization", value: "Bearer {{adminToken}}" }],
-      url: {
-        raw: "{{baseUrl}}/admin/reportes/productos-top?limit=10",
-        host: ["{{baseUrl}}"],
-        path: ["admin", "reportes", "productos-top"],
-        query: [{ key: "limit", value: "10" }]
+      {
+        "name": "Callback de Google [🌍 Pública]",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": "{{baseUrl}}/auth/google/callback",
+          "description": "🌍 **PÚBLICA** — Endpoint donde Google redirige después de autenticarse. Genera el JWT y redirige al frontend."
+        }
       },
-      description: "👑 **ADMIN** — Top de productos más vendidos."
-    }
+      {
+        "name": "Fallo Autenticación [🌍 Pública]",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": "{{baseUrl}}/auth/failure",
+          "description": "🌍 **PÚBLICA** — Endpoint al que se redirige si falla la autenticación de Google."
+        }
+      }
+    ]
   });
 }
 
-if (!reportesGroup.item.find(i => i.name === 'Stats Carritos [👑 Admin]')) {
-  reportesGroup.item.push({
-    name: "Stats Carritos [👑 Admin]",
-    request: {
-      method: "GET",
-      header: [{ key: "Authorization", value: "Bearer {{adminToken}}" }],
-      url: "{{baseUrl}}/admin/stats/carritos",
-      description: "👑 **ADMIN** — Estadísticas de carritos (abandonados, totales)."
-    }
-  });
-}
+// Update counts in description
+data.info.description = data.info.description.replace(/42 total/g, "52 total");
+data.info.description = data.info.description.replace(/Total \| 42 \| 11 \| 16 \| 15/g, "Total | 52 | 16 | 16 | 20");
 
-fs.writeFileSync(filepath, JSON.stringify(doc, null, 2), 'utf8');
+fs.writeFileSync(postmanFile, JSON.stringify(data, null, 2));
 console.log('Postman collection updated successfully!');

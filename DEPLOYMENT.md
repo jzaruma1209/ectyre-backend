@@ -17,11 +17,20 @@ Esta guía detalla los pasos necesarios para desplegar la **API Ectyre** en ento
 Debes configurar las siguientes variables en tu plataforma de hosting:
 
 | Variable | Descripción | Ejemplo / Valor |
-|---|---|---|
+|---|---|---|---|
 | `NODE_ENV` | Entorno de ejecución | `production` |
 | `DATABASE_URL` | URL de conexión completa a PG | `postgres://user:pass@host:port/db?sslmode=require` |
+| `DATABASE_URL_TEST` | URL de BD para tests (Jest) | `postgres://user:pass@host:port/ectyre_test` |
 | `TOKEN_SECRET` | Secreto para firmar JWT | Mínimo 64 caracteres aleatorios |
+| `TOKEN_EXPIRES_IN` | Duración del JWT | `7d` |
 | `CORS_ORIGIN` | Dominios de frontend permitidos | `https://ectyre.com` |
+| `CLOUDINARY_CLOUD_NAME` | Nombre del cloud en Cloudinary | `ectyre` |
+| `CLOUDINARY_API_KEY` | API Key de Cloudinary | (desde dashboard Cloudinary) |
+| `CLOUDINARY_API_SECRET` | API Secret de Cloudinary | (desde dashboard Cloudinary) |
+| `GOOGLE_CLIENT_ID` | Client ID de Google OAuth | (desde Google Cloud Console) |
+| `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth | (desde Google Cloud Console) |
+| `SESSION_SECRET` | Secreto para session de Passport | Cadena aleatoria segura |
+| `CLIENT_URL` | URL del frontend | `https://ectyre.com` |
 | `PORT` | Puerto del servidor | `8080` (Opcional en serverless) |
 
 ---
@@ -40,7 +49,7 @@ Debes configurar las siguientes variables en tu plataforma de hosting:
 En producción, no se debe usar `npm install` local para migrar. Usa los scripts preparados en `package.json`:
 
 ### 1. Ejecutar migraciones
-Para crear las 14 tablas en la base de datos de producción:
+Para crear las 15 tablas en la base de datos de producción:
 ```bash
 npm run db:migrate:prod
 ```
@@ -72,4 +81,4 @@ Una vez desplegada, verifica que la API responda correctamente:
 
 ---
 
-© 2025 Ectyre Team — ¡Listo para volar! 🦅
+© 2026 Ectyre Team — ¡Listo para volar! 🦅

@@ -36,6 +36,27 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         field: "url_imagen",
       },
+      publicId: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        field: "public_id",
+      },
+      ancho: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      alto: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      formato: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
+      bytes: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       tipoImagen: {
         type: DataTypes.ENUM("PRINCIPAL", "LATERAL", "DETALLE"),
         allowNull: false,
@@ -61,6 +82,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
           fields: ["tipo_imagen"],
+        },
+        {
+          fields: ["public_id"],
         },
       ],
     }

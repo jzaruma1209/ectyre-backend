@@ -12,6 +12,7 @@ const pedidoRouter = require("./pedido.router");
 const direccionRouter = require("./direccion.router");
 const adminRouter = require("./admin.router");
 const vehiculoRouter = require("./vehiculo.router");
+const imagenRouter = require("./imagen.router");
 
 router.get("/", (req, res) => {
   res.json({
@@ -29,6 +30,7 @@ router.use("/carrito", carritoRouter);
 router.use("/pedidos", pedidoRouter);
 router.use("/direcciones", direccionRouter);
 router.use("/admin", adminRouter);
+router.use("/admin", imagenRouter);   // 🖼️ Imágenes Cloudinary
 router.use("/vehiculos", vehiculoRouter);
 
 module.exports = router;

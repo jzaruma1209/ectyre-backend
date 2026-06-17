@@ -24,11 +24,15 @@ const validateLlantaData = [
     .withMessage("La marca es requerida")
     .isInt()
     .withMessage("ID de marca inválido"),
-  body("modelo")
+  body("nombre")
     .notEmpty()
-    .withMessage("El modelo es requerido")
-    .isLength({ min: 2, max: 100 })
-    .withMessage("Modelo debe tener entre 2 y 100 caracteres"),
+    .withMessage("El nombre (del producto) es requerido")
+    .isLength({ min: 2, max: 150 })
+    .withMessage("Nombre debe tener entre 2 y 150 caracteres"),
+  body("idModeloLlanta")
+    .optional()
+    .isInt()
+    .withMessage("ID de modelo de llanta inválido"),
   body("ancho")
     .notEmpty()
     .withMessage("El ancho es requerido")
@@ -134,11 +138,11 @@ const validatePedidoData = [
  * Validaciones para agregar al carrito
  */
 const validateCarritoItem = [
-  body("idLlanta")
+  body("idProducto")
     .notEmpty()
-    .withMessage("El ID de llanta es requerido")
+    .withMessage("El ID de producto es requerido")
     .isInt()
-    .withMessage("ID de llanta inválido"),
+    .withMessage("ID de producto inválido"),
   body("cantidad")
     .notEmpty()
     .withMessage("La cantidad es requerida")
@@ -182,6 +186,37 @@ const validateDireccionData = [
   validate,
 ];
 
+/**
+ * Validaciones para Catálogos (código genérico o descripcion)
+ */
+const validateCatalogo = [
+  body("codigo")
+    .optional()
+    .isLength({ min: 1, max: 10 })
+    .withMessage("Código debe tener entre 1 y 10 caracteres"),
+  body("descripcion")
+    .optional()
+    .isLength({ min: 1, max: 150 })
+    .withMessage("Descripción debe tener entre 1 y 150 caracteres"),
+  body("nombre")
+    .optional()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Nombre debe tener entre 1 y 100 caracteres"),
+  validate,
+];
+
+/**
+ * Validaciones para Compatibilidad
+ */
+const validateCompatibilidad = [
+  body("idLlanta").notEmpty().isInt().withMessage("ID de llanta inválido"),
+  body("idModelo").notEmpty().isInt().withMessage("ID de modelo de vehículo inválido"),
+  body("anioDesde").notEmpty().isInt().withMessage("Año desde inválido"),
+  body("anioHasta").optional({ nullable: true }).isInt().withMessage("Año hasta inválido"),
+  body("esOriginal").optional().isBoolean().withMessage("Debe ser booleano"),
+  validate,
+];
+
 module.exports = {
   validate,
   validateLlantaData,
@@ -191,4 +226,6 @@ module.exports = {
   validateCarritoItem,
   validateId,
   validateDireccionData,
+  validateCatalogo,
+  validateCompatibilidad,
 };

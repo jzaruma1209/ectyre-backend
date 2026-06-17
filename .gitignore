@@ -10,3 +10,4 @@ coverage/
 temp/
 *.tmp
 .vercel
+nul 

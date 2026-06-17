@@ -10,6 +10,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idMarca",
         as: "llantas",
       });
+
+      // Una marca tiene muchos modelos de llanta
+      this.hasMany(models.ModeloLlanta, {
+        foreignKey: "idMarca",
+        as: "modelos",
+      });
     }
   }
 

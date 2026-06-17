@@ -25,9 +25,13 @@
             "url": {
               "raw": "http://localhost:8080/",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "8080",
-              "path": [""]
+              "path": [
+                ""
+              ]
             },
             "description": "🌍 **PÚBLICA** — Ruta raíz del servidor. Lista los endpoints disponibles. NOTA: Esta ruta es `http://localhost:8080/` (sin /api/v1)."
           }
@@ -40,11 +44,48 @@
             "url": {
               "raw": "http://localhost:8080/health",
               "protocol": "http",
-              "host": ["localhost"],
+              "host": [
+                "localhost"
+              ],
               "port": "8080",
-              "path": ["health"]
+              "path": [
+                "health"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Estado del servidor. Respuesta: `{ success: true, status: 'OK', timestamp: '...' }`"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔑 Auth (Google)",
+      "description": "Endpoints para autenticación con Google OAuth 2.0. Nota: Se deben probar desde el navegador para completar el flujo de redirección.",
+      "item": [
+        {
+          "name": "Login con Google [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/google",
+            "description": "🌍 **PÚBLICA** — Inicia el flujo de OAuth2 con Google. Se debe acceder desde el navegador."
+          }
+        },
+        {
+          "name": "Callback de Google [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/google/callback",
+            "description": "🌍 **PÚBLICA** — Endpoint donde Google redirige después de autenticarse. Genera el JWT y redirige al frontend."
+          }
+        },
+        {
+          "name": "Fallo Autenticación [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/failure",
+            "description": "🌍 **PÚBLICA** — Endpoint al que se redirige si falla la autenticación de Google."
           }
         }
       ]
@@ -60,8 +101,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/google",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "google"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Inicia el flujo OAuth2 con Google. ⚠️ Abrir en el NAVEGADOR. Redirige al selector de cuenta de Google."
           }
@@ -73,8 +119,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/google/callback",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "google", "callback"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google",
+                "callback"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Google redirige aquí después de autenticarse. Genera el JWT y redirige al frontend con `?token=...`. Este endpoint lo maneja Google automáticamente."
           }
@@ -86,8 +138,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/failure",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "failure"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "failure"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Endpoint al que se redirige si falla la autenticación con Google. Responde con 401."
           }
@@ -103,17 +160,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"tipoIdentificacion\": \"CEDULA\",\n  \"numeroIdentificacion\": \"0959401332\",\n  \"nombres\": \"Paul\",\n  \"apellidos\": \"Zaruma\",\n  \"email\": \"zpaul3984@gmail.com\",\n  \"telefono\": \"0991234567\",\n  \"password\": \"123456\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/clientes/registro",
-              "host": ["{{baseUrl}}"],
-              "path": ["clientes", "registro"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "registro"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Crear cuenta de cliente. Rate limit: máx 3 registros/hora por IP.\n\nValidaciones: tipoIdentificacion (CEDULA|RUC|PASAPORTE), numeroIdentificacion (5-20 chars), nombres/apellidos (2-100 chars), email válido, telefono (7-15 chars), password (mín 6 chars)."
           }
@@ -138,17 +207,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"carlos.mendoza@test.com\",\n  \"password\": \"Test1234!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/clientes/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["clientes", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "login"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Iniciar sesión. El Test Script guarda el token automáticamente en `{{token}}`. Rate limit: máx 5 intentos/15min por IP."
           }
@@ -173,17 +254,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@ectyre.com\",\n  \"password\": \"Admin2026#Ectyre\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/clientes/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["clientes", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "login"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Login del administrador. El Test Script guarda el token en `{{adminToken}}`."
           }
@@ -193,12 +286,20 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/clientes/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["clientes", "logout"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "logout"
+              ]
             },
             "description": "🔒 **JWT requerido** — Cerrar sesión del cliente autenticado."
           }
@@ -208,12 +309,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/clientes/perfil",
-              "host": ["{{baseUrl}}"],
-              "path": ["clientes", "perfil"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "perfil"
+              ]
             },
             "description": "🔒 **JWT requerido** — Ver perfil del cliente autenticado."
           }
@@ -223,18 +332,33 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombres\": \"Carlos Actualizado\",\n  \"telefono\": \"0997654321\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/clientes/perfil",
-              "host": ["{{baseUrl}}"],
-              "path": ["clientes", "perfil"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "perfil"
+              ]
             },
             "description": "🔒 **JWT requerido** — Actualizar datos del perfil del cliente autenticado."
           }
@@ -252,16 +376,53 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/llantas?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas"
+              ],
               "query": [
-                { "key": "page", "value": "1", "description": "Número de página" },
-                { "key": "limit", "value": "10", "description": "Items por página" },
-                { "key": "destacado", "value": "true", "description": "Solo llantas destacadas", "disabled": true },
-                { "key": "idMarca", "value": "1", "description": "Filtrar por ID de marca", "disabled": true },
-                { "key": "ancho", "value": "205", "description": "Filtrar por ancho en mm", "disabled": true },
-                { "key": "perfil", "value": "55", "description": "Filtrar por perfil", "disabled": true },
-                { "key": "rin", "value": "16", "description": "Filtrar por rin en pulgadas", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número de página"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items por página"
+                },
+                {
+                  "key": "destacado",
+                  "value": "true",
+                  "description": "Solo llantas destacadas",
+                  "disabled": true
+                },
+                {
+                  "key": "idMarca",
+                  "value": "1",
+                  "description": "Filtrar por ID de marca",
+                  "disabled": true
+                },
+                {
+                  "key": "ancho",
+                  "value": "205",
+                  "description": "Filtrar por ancho en mm",
+                  "disabled": true
+                },
+                {
+                  "key": "perfil",
+                  "value": "55",
+                  "description": "Filtrar por perfil",
+                  "disabled": true
+                },
+                {
+                  "key": "rin",
+                  "value": "16",
+                  "description": "Filtrar por rin en pulgadas",
+                  "disabled": true
+                }
               ]
             },
             "description": "🌍 **PÚBLICA** — Listar catálogo de llantas con paginación y filtros opcionales."
@@ -274,12 +435,29 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/llantas/buscar-medida?ancho=205&perfil=55&rin=16",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "buscar-medida"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "buscar-medida"
+              ],
               "query": [
-                { "key": "ancho", "value": "205", "description": "Ancho en mm (REQUERIDO)" },
-                { "key": "perfil", "value": "55", "description": "Perfil (REQUERIDO)" },
-                { "key": "rin", "value": "16", "description": "Rin en pulgadas (REQUERIDO)" }
+                {
+                  "key": "ancho",
+                  "value": "205",
+                  "description": "Ancho en mm (REQUERIDO)"
+                },
+                {
+                  "key": "perfil",
+                  "value": "55",
+                  "description": "Perfil (REQUERIDO)"
+                },
+                {
+                  "key": "rin",
+                  "value": "16",
+                  "description": "Rin en pulgadas (REQUERIDO)"
+                }
               ]
             },
             "description": "🌍 **PÚBLICA** — Buscar llantas por medida exacta. Los 3 parámetros son obligatorios."
@@ -292,12 +470,29 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/llantas/buscar-vehiculo?marca=Toyota&modelo=Corolla&anio=2020",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "buscar-vehiculo"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "buscar-vehiculo"
+              ],
               "query": [
-                { "key": "marca", "value": "Toyota", "description": "Marca del vehículo" },
-                { "key": "modelo", "value": "Corolla", "description": "Modelo del vehículo" },
-                { "key": "anio", "value": "2020", "description": "Año del vehículo" }
+                {
+                  "key": "marca",
+                  "value": "Toyota",
+                  "description": "Marca del vehículo"
+                },
+                {
+                  "key": "modelo",
+                  "value": "Corolla",
+                  "description": "Modelo del vehículo"
+                },
+                {
+                  "key": "anio",
+                  "value": "2020",
+                  "description": "Año del vehículo"
+                }
               ]
             },
             "description": "🌍 **PÚBLICA** — Buscar llantas compatibles con un vehículo específico."
@@ -310,12 +505,27 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/llantas/buscar-general?search=Michelin&page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "buscar-general"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "buscar-general"
+              ],
               "query": [
-                { "key": "search", "value": "Michelin", "description": "Texto de búsqueda (marca, modelo, descripción)" },
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" }
+                {
+                  "key": "search",
+                  "value": "Michelin",
+                  "description": "Texto de búsqueda (marca, modelo, descripción)"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             },
             "description": "🌍 **PÚBLICA** — Búsqueda por texto libre en marca, modelo o descripción. Ideal para la barra de búsqueda del frontend."
@@ -328,10 +538,19 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/llantas/recomendaciones?rin=16",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "recomendaciones"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "recomendaciones"
+              ],
               "query": [
-                { "key": "rin", "value": "16", "description": "Rin en pulgadas" }
+                {
+                  "key": "rin",
+                  "value": "16",
+                  "description": "Rin en pulgadas"
+                }
               ]
             },
             "description": "🌍 **PÚBLICA** — Obtener llantas recomendadas filtradas por rin."
@@ -344,8 +563,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/llantas/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "1"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Detalle de una llanta por ID. IDs válidos del seeder: 1 al 13."
           }
@@ -355,18 +579,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idMarca\": 1,\n  \"modelo\": \"Primacy 4\",\n  \"ancho\": 205,\n  \"perfil\": 55,\n  \"rin\": 16,\n  \"precio\": 180.50,\n  \"stock\": 20,\n  \"descripcion\": \"Llanta de alto rendimiento para turismo\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/llantas",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas"
+              ]
             },
             "description": "👑 **ADMIN** — Crear nueva llanta (sin imagen). Para crear con imagen usa el endpoint de Imágenes después de crear la llanta.\n\nValidaciones: idMarca (int), modelo (2-100), ancho (100-400), perfil (25-100), rin (10-30), precio (decimal), stock (int >= 0)."
           }
@@ -376,18 +614,33 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idMarca\": 1,\n  \"modelo\": \"Primacy 4 Plus\",\n  \"ancho\": 205,\n  \"perfil\": 55,\n  \"rin\": 16,\n  \"precio\": 195.00,\n  \"stock\": 15\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/llantas/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "1"
+              ]
             },
             "description": "👑 **ADMIN** — Actualizar llanta existente. Reemplaza `1` con el ID real."
           }
@@ -397,12 +650,20 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/llantas/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["llantas", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "llantas",
+                "1"
+              ]
             },
             "description": "👑 **ADMIN** — Eliminar llanta (soft delete: activo=false). Reemplaza `1` con el ID real."
           }
@@ -420,8 +681,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/vehiculos/marcas",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehiculos", "marcas"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "marcas"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Listar todas las marcas de vehículos activas (8 marcas en seeder)."
           }
@@ -433,8 +699,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/vehiculos/marcas/completo",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehiculos", "marcas", "completo"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "marcas",
+                "completo"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Listar marcas con sus modelos anidados."
           }
@@ -446,8 +718,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/vehiculos/marcas/1/modelos",
-              "host": ["{{baseUrl}}"],
-              "path": ["vehiculos", "marcas", "1", "modelos"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vehiculos",
+                "marcas",
+                "1",
+                "modelos"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Modelos de una marca específica. IDs de marcas válidos: 1 (Toyota) al 8 (Volkswagen)."
           }
@@ -463,14 +742,28 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "disabled": true, "description": "Opcional" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "disabled": true,
+                "description": "Opcional"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/carrito",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrito"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrito"
+              ],
               "query": [
-                { "key": "sesionId", "value": "abc123", "description": "Para uso anónimo sin JWT", "disabled": true }
+                {
+                  "key": "sesionId",
+                  "value": "abc123",
+                  "description": "Para uso anónimo sin JWT",
+                  "disabled": true
+                }
               ]
             },
             "description": "🌍/🔒 **Auth Opcional** — Ver contenido del carrito. Con JWT usa cuenta del cliente. Sin JWT usar `?sesionId=abc123`."
@@ -481,18 +774,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "disabled": true, "description": "Opcional" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "disabled": true,
+                "description": "Opcional"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idLlanta\": 1,\n  \"cantidad\": 2\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/carrito/agregar",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrito", "agregar"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrito",
+                "agregar"
+              ]
             },
             "description": "🌍/🔒 **Auth Opcional** — Agregar llanta al carrito. Validaciones: idLlanta (int requerido), cantidad (int >= 1)."
           }
@@ -502,18 +812,35 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "disabled": true },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "disabled": true
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"cantidad\": 4\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/carrito/actualizar/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrito", "actualizar", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrito",
+                "actualizar",
+                "1"
+              ]
             },
             "description": "🌍/🔒 **Auth Opcional** — Actualizar cantidad de un item en el carrito. Reemplaza `1` con el ID del item."
           }
@@ -523,12 +850,22 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "disabled": true }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "disabled": true
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/carrito/eliminar/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrito", "eliminar", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrito",
+                "eliminar",
+                "1"
+              ]
             },
             "description": "🌍/🔒 **Auth Opcional** — Eliminar un item del carrito. Reemplaza `1` con el ID del item."
           }
@@ -538,12 +875,21 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}", "disabled": true }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "disabled": true
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/carrito/vaciar",
-              "host": ["{{baseUrl}}"],
-              "path": ["carrito", "vaciar"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carrito",
+                "vaciar"
+              ]
             },
             "description": "🌍/🔒 **Auth Opcional** — Vaciar todo el carrito."
           }
@@ -559,18 +905,33 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"idDireccionEntrega\": 1,\n  \"requiereInstalacion\": false\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/pedidos/checkout",
-              "host": ["{{baseUrl}}"],
-              "path": ["pedidos", "checkout"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "checkout"
+              ]
             },
             "description": "🔒 **JWT requerido** — Procesar la compra y crear el pedido desde el carrito. Validaciones: idDireccionEntrega (int requerido), requiereInstalacion (bool opcional)."
           }
@@ -580,12 +941,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/pedidos",
-              "host": ["{{baseUrl}}"],
-              "path": ["pedidos"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
             },
             "description": "🔒 **JWT requerido** — Listar todos los pedidos del cliente autenticado."
           }
@@ -595,12 +963,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/pedidos/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["pedidos", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "1"
+              ]
             },
             "description": "🔒 **JWT requerido** — Detalle de un pedido específico. Reemplaza `1` con el ID real."
           }
@@ -610,12 +986,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/pedidos/1/tracking",
-              "host": ["{{baseUrl}}"],
-              "path": ["pedidos", "1", "tracking"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                "1",
+                "tracking"
+              ]
             },
             "description": "🔒 **JWT requerido** — Ver el historial de estados (tracking) de un pedido. Reemplaza `1` con el ID real."
           }
@@ -631,12 +1016,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/direcciones",
-              "host": ["{{baseUrl}}"],
-              "path": ["direcciones"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "direcciones"
+              ]
             },
             "description": "🔒 **JWT requerido** — Listar todas las direcciones del cliente autenticado."
           }
@@ -646,18 +1038,32 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"provincia\": \"Pichincha\",\n  \"ciudad\": \"Quito\",\n  \"direccionCompleta\": \"Av. Amazonas N23-45 y Colón\",\n  \"referencia\": \"Frente al parque La Carolina\",\n  \"esPrincipal\": true\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/direcciones",
-              "host": ["{{baseUrl}}"],
-              "path": ["direcciones"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "direcciones"
+              ]
             },
             "description": "🔒 **JWT requerido** — Crear nueva dirección de entrega. Validaciones: provincia/ciudad (2-100 chars requeridos), direccionCompleta (mín 5 chars), referencia (máx 255 opcional), esPrincipal (bool opcional)."
           }
@@ -667,18 +1073,33 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"provincia\": \"Pichincha\",\n  \"ciudad\": \"Quito\",\n  \"direccionCompleta\": \"Av. 10 de Agosto N12-34\",\n  \"referencia\": \"Edificio azul, piso 3\",\n  \"esPrincipal\": false\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/direcciones/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["direcciones", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "direcciones",
+                "1"
+              ]
             },
             "description": "🔒 **JWT requerido** — Actualizar dirección existente. Reemplaza `1` con el ID real."
           }
@@ -688,12 +1109,20 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/direcciones/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["direcciones", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "direcciones",
+                "1"
+              ]
             },
             "description": "🔒 **JWT requerido** — Eliminar dirección. Reemplaza `1` con el ID real."
           }
@@ -709,12 +1138,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/dashboard",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "dashboard"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ]
             },
             "description": "👑 **ADMIN** — Métricas generales del sistema: total clientes, pedidos, ingresos del mes."
           }
@@ -724,16 +1161,35 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/clientes?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "clientes"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "clientes"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "search", "value": "carlos", "description": "Buscar por nombre o email", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "carlos",
+                  "description": "Buscar por nombre o email",
+                  "disabled": true
+                }
               ]
             },
             "description": "👑 **ADMIN** — Listar todos los clientes con paginación y búsqueda opcional."
@@ -744,12 +1200,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/clientes/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "clientes", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "clientes",
+                "1"
+              ]
             },
             "description": "👑 **ADMIN** — Ver detalle de un cliente. Reemplaza `1` con el ID real."
           }
@@ -759,12 +1224,22 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/clientes/1/toggle",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "clientes", "1", "toggle"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "clientes",
+                "1",
+                "toggle"
+              ]
             },
             "description": "👑 **ADMIN** — Activar o desactivar un cliente (soft toggle). Reemplaza `1` con el ID real."
           }
@@ -774,15 +1249,31 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/clientes/1/pedidos?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "clientes", "1", "pedidos"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "clientes",
+                "1",
+                "pedidos"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             },
             "description": "👑 **ADMIN** — Historial de pedidos de un cliente específico. Reemplaza `1` con el ID del cliente."
@@ -793,15 +1284,31 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/pedidos?page=1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "pedidos"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pedidos"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "estado", "value": "PENDIENTE", "description": "Filtrar por estado", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE",
+                  "description": "Filtrar por estado",
+                  "disabled": true
+                }
               ]
             },
             "description": "👑 **ADMIN** — Listar todos los pedidos del sistema. Estados: PENDIENTE | CONFIRMADO | EN_PREPARACION | ENVIADO | ENTREGADO | CANCELADO."
@@ -812,12 +1319,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/pedidos/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "pedidos", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pedidos",
+                "1"
+              ]
             },
             "description": "👑 **ADMIN** — Ver detalle completo de un pedido. Reemplaza `1` con el ID real."
           }
@@ -827,18 +1343,35 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"estado\": \"CONFIRMADO\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/admin/pedidos/1/estado",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "pedidos", "1", "estado"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "pedidos",
+                "1",
+                "estado"
+              ]
             },
             "description": "👑 **ADMIN** — Cambiar estado de un pedido. Estados válidos: PENDIENTE, CONFIRMADO, EN_PREPARACION, ENVIADO, ENTREGADO, CANCELADO. Reemplaza `1` con el ID real."
           }
@@ -848,18 +1381,35 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"cantidad\": 5\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/admin/llantas/1/stock",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "llantas", "1", "stock"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "llantas",
+                "1",
+                "stock"
+              ]
             },
             "description": "👑 **ADMIN** — Actualizar el stock/inventario de una llanta. Reemplaza `1` con el ID real."
           }
@@ -869,15 +1419,32 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/reportes/ventas?desde=2026-01-01&hasta=2026-12-31",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "reportes", "ventas"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reportes",
+                "ventas"
+              ],
               "query": [
-                { "key": "desde", "value": "2026-01-01", "description": "Fecha inicio YYYY-MM-DD" },
-                { "key": "hasta", "value": "2026-12-31", "description": "Fecha fin YYYY-MM-DD" }
+                {
+                  "key": "desde",
+                  "value": "2026-01-01",
+                  "description": "Fecha inicio YYYY-MM-DD"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-12-31",
+                  "description": "Fecha fin YYYY-MM-DD"
+                }
               ]
             },
             "description": "👑 **ADMIN** — Reporte de ventas por rango de fechas."
@@ -888,16 +1455,37 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/reportes/productos-top?limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "reportes", "productos-top"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reportes",
+                "productos-top"
+              ],
               "query": [
-                { "key": "limit", "value": "10", "description": "Cantidad de productos (default: 10)" },
-                { "key": "desde", "value": "2026-01-01", "disabled": true },
-                { "key": "hasta", "value": "2026-12-31", "disabled": true }
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Cantidad de productos (default: 10)"
+                },
+                {
+                  "key": "desde",
+                  "value": "2026-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-12-31",
+                  "disabled": true
+                }
               ]
             },
             "description": "👑 **ADMIN** — Top de llantas más vendidas."
@@ -908,12 +1496,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/stats/carritos",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "stats", "carritos"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "stats",
+                "carritos"
+              ]
             },
             "description": "👑 **ADMIN** — Estadísticas de carritos activos en el sistema."
           }
@@ -931,8 +1528,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/llantas/1/imagenes",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "llantas", "1", "imagenes"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "llantas",
+                "1",
+                "imagenes"
+              ]
             },
             "description": "🌍 **PÚBLICA** — Obtener todas las imágenes asociadas a una llanta. Reemplaza `1` con el ID real."
           }
@@ -942,19 +1546,39 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "imagen", "type": "file", "src": "", "description": "Archivo .jpg/.jpeg/.png/.webp (máx 5MB)" },
-                { "key": "tipoImagen", "value": "PRINCIPAL", "type": "text", "description": "PRINCIPAL | LATERAL | DETALLE (opcional)" }
+                {
+                  "key": "imagen",
+                  "type": "file",
+                  "src": "",
+                  "description": "Archivo .jpg/.jpeg/.png/.webp (máx 5MB)"
+                },
+                {
+                  "key": "tipoImagen",
+                  "value": "PRINCIPAL",
+                  "type": "text",
+                  "description": "PRINCIPAL | LATERAL | DETALLE (opcional)"
+                }
               ]
             },
             "url": {
               "raw": "{{baseUrl}}/admin/llantas/1/imagenes",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "llantas", "1", "imagenes"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "llantas",
+                "1",
+                "imagenes"
+              ]
             },
             "description": "👑 **ADMIN** — Subir una imagen para una llanta. ⚠️ Usar form-data en Postman, NO raw JSON. Reemplaza `1` con el ID de la llanta."
           }
@@ -964,18 +1588,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "imagenes", "type": "file", "src": "", "description": "Hasta 5 archivos de imagen" }
+                {
+                  "key": "imagenes",
+                  "type": "file",
+                  "src": "",
+                  "description": "Hasta 5 archivos de imagen"
+                }
               ]
             },
             "url": {
               "raw": "{{baseUrl}}/admin/llantas/1/imagenes/multiple",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "llantas", "1", "imagenes", "multiple"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "llantas",
+                "1",
+                "imagenes",
+                "multiple"
+              ]
             },
             "description": "👑 **ADMIN** — Subir hasta 5 imágenes de una sola vez. ⚠️ Usar form-data. Reemplaza `1` con el ID de la llanta."
           }
@@ -985,12 +1625,24 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/llantas/1/imagenes/1/principal",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "llantas", "1", "imagenes", "1", "principal"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "llantas",
+                "1",
+                "imagenes",
+                "1",
+                "principal"
+              ]
             },
             "description": "👑 **ADMIN** — Establecer una imagen como la principal de la llanta. Reemplaza el primer `1` con el ID de llanta y el segundo `1` con el ID de imagen."
           }
@@ -1000,14 +1652,671 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/admin/imagenes/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "imagenes", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "imagenes",
+                "1"
+              ]
             },
             "description": "👑 **ADMIN** — Elimina una imagen de la base de datos Y de Cloudinary. Reemplaza `1` con el idImagen real."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Catálogos",
+      "description": "Endpoints para la gestión de catálogos.",
+      "item": [
+        {
+          "name": "Obtener Todos los Catálogos [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogos"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Modelos de Llanta",
+          "item": [
+            {
+              "name": "Obtener Todos [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/modelos-llanta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "modelos-llanta"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Obtener por ID [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/modelos-llanta/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "modelos-llanta",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Crear [👑 Admin]",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/modelos-llanta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "modelos-llanta"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Actualizar [👑 Admin]",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/modelos-llanta/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "modelos-llanta",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Eliminar [👑 Admin]",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/modelos-llanta/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "modelos-llanta",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Índices de Carga",
+          "item": [
+            {
+              "name": "Obtener Todos [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/indices-carga",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "indices-carga"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Crear [👑 Admin]",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/indices-carga",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "indices-carga"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Eliminar [👑 Admin]",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/indices-carga/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "indices-carga",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Índices de Velocidad",
+          "item": [
+            {
+              "name": "Obtener Todos [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/indices-velocidad",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "indices-velocidad"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Crear [👑 Admin]",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/indices-velocidad",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "indices-velocidad"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Eliminar [👑 Admin]",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/indices-velocidad/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "indices-velocidad",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Temperaturas",
+          "item": [
+            {
+              "name": "Obtener Todas [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/temperaturas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "temperaturas"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Crear [👑 Admin]",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/temperaturas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "temperaturas"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Eliminar [👑 Admin]",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/temperaturas/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "temperaturas",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipos de Llanta",
+          "item": [
+            {
+              "name": "Obtener Todos [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/tipos-llanta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "tipos-llanta"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Crear [👑 Admin]",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/tipos-llanta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "tipos-llanta"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Actualizar [👑 Admin]",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/tipos-llanta/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "tipos-llanta",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Eliminar [👑 Admin]",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/tipos-llanta/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "tipos-llanta",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sentidos de Rotación",
+          "item": [
+            {
+              "name": "Obtener Todos [🌍 Pública]",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/sentidos-rotacion",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "sentidos-rotacion"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Crear [👑 Admin]",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/sentidos-rotacion",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "sentidos-rotacion"
+                  ],
+                  "query": []
+                }
+              }
+            },
+            {
+              "name": "Eliminar [👑 Admin]",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalogos/sentidos-rotacion/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalogos",
+                    "sentidos-rotacion",
+                    "1"
+                  ],
+                  "query": []
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔗 Compatibilidad",
+      "description": "Endpoints para la gestión de compatibilidad entre llantas y vehículos.",
+      "item": [
+        {
+          "name": "Llantas por Vehículo [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compatibilidad/vehiculo?idModelo=1&anio=2020",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compatibilidad",
+                "vehiculo"
+              ],
+              "query": [
+                {
+                  "key": "idModelo",
+                  "value": "1"
+                },
+                {
+                  "key": "anio",
+                  "value": "2020"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vehículos por Llanta [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compatibilidad/llanta/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compatibilidad",
+                "llanta",
+                "1"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Detalle por ID [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compatibilidad/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compatibilidad",
+                "1"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Crear Compatibilidad [👑 Admin]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compatibilidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compatibilidad"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Actualizar Compatibilidad [👑 Admin]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compatibilidad/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compatibilidad",
+                "1"
+              ],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Eliminar Compatibilidad [👑 Admin]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compatibilidad/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compatibilidad",
+                "1"
+              ],
+              "query": []
+            }
           }
         }
       ]

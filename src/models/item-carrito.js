@@ -11,10 +11,10 @@ module.exports = (sequelize, DataTypes) => {
         as: "carrito",
       });
 
-      // Un item pertenece a una llanta
-      this.belongsTo(models.Llanta, {
-        foreignKey: "idLlanta",
-        as: "llanta",
+      // Un item pertenece a un producto
+      this.belongsTo(models.Producto, {
+        foreignKey: "idProducto",
+        as: "producto",
       });
     }
   }
@@ -37,14 +37,15 @@ module.exports = (sequelize, DataTypes) => {
         },
         onDelete: "CASCADE",
       },
-      idLlanta: {
+      idProducto: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: "id_llanta",
+        field: "id_producto",
         references: {
-          model: "llantas",
-          key: "id_llanta",
+          model: "productos",
+          key: "id_producto",
         },
+        onDelete: "RESTRICT",
       },
       cantidad: {
         type: DataTypes.INTEGER,
@@ -72,7 +73,7 @@ module.exports = (sequelize, DataTypes) => {
           fields: ["id_carrito"],
         },
         {
-          fields: ["id_llanta"],
+          fields: ["id_producto"],
         },
       ],
     }

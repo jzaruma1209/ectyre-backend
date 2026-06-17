@@ -311,6 +311,77 @@ Listar modelos de una marca específica.
 
 ---
 
+## 📋 Catálogos — `/api/v1/catalogos`
+
+Endpoints para la gestión de datos maestros. **Todos los GET son Públicos (🌍)**, mientras que los **POST/PUT/DELETE requieren permisos de Admin (👑)**.
+
+### GET /
+Obtener una vista consolidada de todos los catálogos.
+
+### /modelos-llanta
+- `GET /modelos-llanta` 🌍
+- `GET /modelos-llanta/:id` 🌍
+- `POST /modelos-llanta` 👑
+- `PUT /modelos-llanta/:id` 👑
+- `DELETE /modelos-llanta/:id` 👑
+
+### /indices-carga
+- `GET /indices-carga` 🌍
+- `POST /indices-carga` 👑
+- `DELETE /indices-carga/:id` 👑
+
+### /indices-velocidad
+- `GET /indices-velocidad` 🌍
+- `POST /indices-velocidad` 👑
+- `DELETE /indices-velocidad/:id` 👑
+
+### /temperaturas
+- `GET /temperaturas` 🌍
+- `POST /temperaturas` 👑
+- `DELETE /temperaturas/:id` 👑
+
+### /tipos-llanta
+- `GET /tipos-llanta` 🌍
+- `POST /tipos-llanta` 👑
+- `PUT /tipos-llanta/:id` 👑
+- `DELETE /tipos-llanta/:id` 👑
+
+### /sentidos-rotacion
+- `GET /sentidos-rotacion` 🌍
+- `POST /sentidos-rotacion` 👑
+- `DELETE /sentidos-rotacion/:id` 👑
+
+---
+
+## 🔗 Compatibilidad — `/api/v1/compatibilidad`
+
+### GET /vehiculo
+Buscar llantas compatibles con un vehículo específico.
+- **Query Params:** `idModelo` (number), `anio` (number)
+- **Auth:** 🌍 Público
+
+### GET /llanta/:id
+Buscar vehículos compatibles con una llanta específica.
+- **Auth:** 🌍 Público
+
+### GET /:id
+Obtener detalle de un registro de compatibilidad.
+- **Auth:** 🌍 Público
+
+### POST /
+Crear un nuevo registro de compatibilidad llanta-vehículo.
+- **Auth:** 👑 Admin
+
+### PUT /:id
+Actualizar un registro de compatibilidad.
+- **Auth:** 👑 Admin
+
+### DELETE /:id
+Eliminar un registro de compatibilidad.
+- **Auth:** 👑 Admin
+
+---
+
 ## 🛒 Carrito — `/api/v1/carrito`
 
 > El carrito soporta usuarios autenticados (JWT) o invitados (sesión anónima).  
@@ -628,11 +699,13 @@ Estadísticas de carritos actuales.
 | Clientes | 5 | 2 | 3 | 0 |
 | Llantas | 8 | 4 | 0 | 4 |
 | Vehículos | 3 | 3 | 0 | 0 |
+| Catálogos | 22 | 7 | 0 | 15 |
+| Compatibilidad | 6 | 3 | 0 | 3 |
 | Carrito | 5 | 0 | 5* | 0 |
 | Pedidos | 4 | 0 | 4 | 0 |
 | Direcciones | 4 | 0 | 4 | 0 |
 | Admin | 14 | 0 | 0 | 14 |
-| **Total** | **43** | **9** | **16** | **18** |
+| **Total** | **71** | **19** | **16** | **36** |
 
 > *El carrito acepta autenticación opcional (también funciona sin token como sesión anónima)
 

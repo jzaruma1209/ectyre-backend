@@ -13,12 +13,14 @@ const direccionRouter = require("./direccion.router");
 const adminRouter = require("./admin.router");
 const vehiculoRouter = require("./vehiculo.router");
 const imagenRouter = require("./imagen.router");
+const catalogoRouter = require("./catalogo.router");
+const compatibilidadRouter = require("./compatibilidad.router");
 
 router.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Bienvenido a API Ectyre v1",
-    endpoints: ["/auth", "/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/admin"]
+    endpoints: ["/auth", "/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/catalogos", "/compatibilidad", "/admin"]
   });
 });
 
@@ -32,5 +34,7 @@ router.use("/direcciones", direccionRouter);
 router.use("/admin", adminRouter);
 router.use("/admin", imagenRouter);   // 🖼️ Imágenes Cloudinary
 router.use("/vehiculos", vehiculoRouter);
+router.use("/catalogos", catalogoRouter);          // 📋 Catálogos de llantas
+router.use("/compatibilidad", compatibilidadRouter); // 🔗 Compatibilidad llanta-vehículo
 
 module.exports = router;

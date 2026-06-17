@@ -1,63 +1,107 @@
 const {
   Llanta,
   MarcaLlanta,
-  ImagenLlanta,
+  ModeloLlanta,
+  IndiceCarga,
+  IndiceVelocidad,
+  Temperatura,
+  TipoLlanta,
+  SentidoRotacion,
+  Producto,
+  ImagenProducto,
   Compatibilidad,
   ModeloVehiculo,
   MarcaVehiculo,
 } = require("../models");
 const { NotFoundError } = require("../utils/customErrors");
 const { Op } = require("sequelize");
+const sequelize = require("../models").sequelize; // Asumiendo que sequelize está exportado en index.js
 
-// Include estándar para cualquier búsqueda
+// ─── Include estándar — llanta pública (catálogo) ────────────────────────────
 const defaultInclude = [
+  {
+    model: Producto,
+    as: "producto",
+    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo", "destacado", "descripcion"],
+    include: [
+      {
+        model: ImagenProducto,
+        as: "imagenes",
+        where: { tipoImagen: "PRINCIPAL" },
+        required: false,
+        attributes: ["idImagen", "urlImagen", "orden"],
+      },
+    ],
+  },
   {
     model: MarcaLlanta,
     as: "marca",
     attributes: ["idMarca", "nombre", "logoUrl"],
   },
+];
+
+// ─── Include extendido — detalle completo ────────────────────────────────────
+const fullInclude = [
   {
-    model: ImagenLlanta,
-    as: "imagenes",
-    where: { tipoImagen: "PRINCIPAL" },
-    required: false,
+    model: Producto,
+    as: "producto",
+    include: [
+      {
+        model: ImagenProducto,
+        as: "imagenes",
+        order: [["orden", "ASC"]],
+      },
+    ],
   },
+  { model: MarcaLlanta, as: "marca" },
+  { model: ModeloLlanta, as: "modeloLlanta" },
+  { model: IndiceCarga, as: "indiceCarga" },
+  { model: IndiceVelocidad, as: "indiceVelocidad" },
+  { model: Temperatura, as: "temperatura" },
+  { model: TipoLlanta, as: "tipoLlanta" },
+  { model: SentidoRotacion, as: "sentidoRotacion" },
 ];
 
 class LlantaService {
-  // Obtener todas las llantas
+  // Obtener todas las llantas (catálogo público)
   async getAllLlantas(filters = {}) {
-    const where = { activo: true };
+    const where = {};
+    const productoWhere = { activo: true };
 
-    if (filters.destacado) where.destacado = true;
+    if (filters.destacado === true || filters.destacado === "true") productoWhere.destacado = true;
     if (filters.idMarca) where.idMarca = filters.idMarca;
     if (filters.ancho) where.ancho = filters.ancho;
     if (filters.perfil) where.perfil = filters.perfil;
     if (filters.rin) where.rin = filters.rin;
+    if (filters.idTipoLlanta) where.idTipoLlanta = filters.idTipoLlanta;
 
-    /* return Llanta.findAll({
-       where,
-       include: defaultInclude,
-       order: [
-         ["destacado", "DESC"],
-         ["createdAt", "DESC"],
-       ],
-     }); */
     return Llanta.findAll({
       where,
-      include: defaultInclude,
+      include: [
+        {
+          model: Producto,
+          as: "producto",
+          where: productoWhere,
+          attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo", "destacado"],
+          include: [
+            {
+              model: ImagenProducto,
+              as: "imagenes",
+              where: { tipoImagen: "PRINCIPAL" },
+              required: false,
+              attributes: ["idImagen", "urlImagen"],
+            },
+          ],
+        },
+        { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
+      ],
       order: [["idLlanta", "ASC"]],
     });
   }
 
-  // Obtener llanta por ID
+  // Obtener llanta por ID (detalle completo)
   async getLlantaById(id) {
-    const llanta = await Llanta.findByPk(id, {
-      include: [
-        { model: MarcaLlanta, as: "marca" },
-        { model: ImagenLlanta, as: "imagenes", order: [["orden", "ASC"]] },
-      ],
-    });
+    const llanta = await Llanta.findByPk(id, { include: fullInclude });
     if (!llanta) throw new NotFoundError("Llanta no encontrada");
     return llanta;
   }
@@ -65,13 +109,30 @@ class LlantaService {
   // Buscar por medida exacta (ancho / perfil / rin)
   async buscarPorMedida(ancho, perfil, rin) {
     return Llanta.findAll({
-      where: { ancho, perfil, rin, activo: true, stock: { [Op.gt]: 0 } },
-      include: defaultInclude,
-      order: [["precio", "ASC"]],
+      where: { ancho, perfil, rin },
+      include: [
+        {
+          model: Producto,
+          as: "producto",
+          where: { activo: true, stock: { [Op.gt]: 0 } },
+          attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock"],
+          include: [
+            {
+              model: ImagenProducto,
+              as: "imagenes",
+              where: { tipoImagen: "PRINCIPAL" },
+              required: false,
+              attributes: ["urlImagen"],
+            },
+          ],
+        },
+        { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
+      ],
+      order: [["$producto.precio$", "ASC"]],
     });
   }
 
-  // Buscar por vehículo (marca / modelo / año)
+  // Buscar por vehículo (marca / modelo / año) — por texto (retrocompatibilidad)
   async buscarPorVehiculo(marcaVehiculo, modeloVehiculo, anio) {
     return Llanta.findAll({
       include: [
@@ -100,29 +161,35 @@ class LlantaService {
             },
           ],
         },
-        ...defaultInclude,
+        {
+          model: Producto,
+          as: "producto",
+          where: { activo: true, stock: { [Op.gt]: 0 } },
+          attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock"],
+          include: [
+            {
+              model: ImagenProducto,
+              as: "imagenes",
+              where: { tipoImagen: "PRINCIPAL" },
+              required: false,
+              attributes: ["urlImagen"],
+            },
+          ],
+        },
+        { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
       ],
-      where: { activo: true, stock: { [Op.gt]: 0 } },
     });
   }
 
   /**
    * Búsqueda general por texto libre.
-   *
-   * Lógica:
-   *  1. Detecta medida tipo "185/65R14" o "185/65r14".
-   *     a) Sin marca extra  → busca TODAS las marcas con esa medida exacta.
-   *     b) Con marca extra  → busca esa marca + esa medida.
-   *  2. Si no es medida → busca por modelo, descripción y nombre de marca.
-   *
-   * Devuelve: { resultados, tipo, parsedMedida, marcaBuscada }
+   * Detecta medida tipo "185/65R14" o busca por marca/descripción.
    */
   async buscarGeneral(q) {
     const query = (q || "").trim();
     if (!query) return { resultados: [], tipo: "vacio", parsedMedida: null, marcaBuscada: null };
 
     // ── Intentar parsear medida ──────────────────────────────────────────────
-    // Acepta: 185/65R14, 185/65r14, 185-65-14, "185 65 14"
     const medidaRegex = /(\d{3})\s*[\/\-]\s*(\d{2})\s*[Rr]?\s*(\d{2})/;
     const medidaMatch = query.match(medidaRegex);
 
@@ -131,34 +198,27 @@ class LlantaService {
       const perfil = parseInt(medidaMatch[2]);
       const rin = parseInt(medidaMatch[3]);
 
-      // Texto restante = posible nombre de marca
       const restoQuery = query.replace(medidaRegex, "").trim();
       const tieneMarca = restoQuery.length > 0;
 
-      const whereExacto = { activo: true, ancho, perfil, rin };
-
-      const includeConMarca = tieneMarca
-        ? [
-          {
-            model: MarcaLlanta,
-            as: "marca",
-            attributes: ["idMarca", "nombre", "logoUrl"],
-            where: { nombre: { [Op.iLike]: `%${restoQuery}%` } },
-            required: true,
-          },
-          {
-            model: ImagenLlanta,
-            as: "imagenes",
-            where: { tipoImagen: "PRINCIPAL" },
-            required: false,
-          },
-        ]
-        : defaultInclude;
+      const marcaInclude = tieneMarca
+        ? { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"], where: { nombre: { [Op.iLike]: `%${restoQuery}%` } }, required: true }
+        : { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] };
 
       const resultados = await Llanta.findAll({
-        where: whereExacto,
-        include: includeConMarca,
-        order: [["precio", "ASC"]],
+        where: { ancho, perfil, rin },
+        include: [
+          {
+            model: Producto,
+            as: "producto",
+            where: { activo: true },
+            attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock"],
+            include: [
+              { model: ImagenProducto, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false, attributes: ["urlImagen"] },
+            ],
+          },
+          marcaInclude,
+        ],
       });
 
       return {
@@ -170,32 +230,36 @@ class LlantaService {
     }
 
     // ── Búsqueda por texto libre ─────────────────────────────────────────────
-    const textWhere = {
-      activo: true,
-      [Op.or]: [
-        { modelo: { [Op.iLike]: `%${query}%` } },
-        { descripcion: { [Op.iLike]: `%${query}%` } },
-        { procedencia: { [Op.iLike]: `%${query}%` } },
-      ],
-    };
-
-    const [porTexto, porMarca] = await Promise.all([
+    const [porNombre, porMarca] = await Promise.all([
       Llanta.findAll({
-        where: textWhere,
         include: [
           {
-            model: MarcaLlanta,
-            as: "marca",
-            attributes: ["idMarca", "nombre", "logoUrl"],
-            required: false,
+            model: Producto,
+            as: "producto",
+            where: {
+              activo: true,
+              [Op.or]: [
+                { nombre: { [Op.iLike]: `%${query}%` } },
+                { descripcion: { [Op.iLike]: `%${query}%` } },
+              ],
+            },
+            include: [
+              { model: ImagenProducto, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false, attributes: ["urlImagen"] },
+            ],
           },
-          { model: ImagenLlanta, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false },
+          { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"], required: false },
         ],
-        order: [["destacado", "DESC"], ["precio", "ASC"]],
       }),
       Llanta.findAll({
-        where: { activo: true },
         include: [
+          {
+            model: Producto,
+            as: "producto",
+            where: { activo: true },
+            include: [
+              { model: ImagenProducto, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false, attributes: ["urlImagen"] },
+            ],
+          },
           {
             model: MarcaLlanta,
             as: "marca",
@@ -203,15 +267,13 @@ class LlantaService {
             where: { nombre: { [Op.iLike]: `%${query}%` } },
             required: true,
           },
-          { model: ImagenLlanta, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false },
         ],
-        order: [["destacado", "DESC"], ["precio", "ASC"]],
       }),
     ]);
 
     // Deduplicar por idLlanta
     const seen = new Set();
-    const combinados = [...porTexto, ...porMarca].filter((l) => {
+    const combinados = [...porNombre, ...porMarca].filter((l) => {
       if (seen.has(l.idLlanta)) return false;
       seen.add(l.idLlanta);
       return true;
@@ -226,55 +288,121 @@ class LlantaService {
    */
   async obtenerRecomendaciones({ rin, excluirIds = [], limit = 8 }) {
     const excluir = Array.isArray(excluirIds) ? excluirIds : [];
-    const baseWhere = { activo: true, stock: { [Op.gt]: 0 } };
-    if (rin) baseWhere.rin = rin;
-    if (excluir.length > 0) baseWhere.idLlanta = { [Op.notIn]: excluir };
+    const llantaWhere = {};
+    const productoWhere = { activo: true, stock: { [Op.gt]: 0 } };
+    if (rin) llantaWhere.rin = rin;
+    if (excluir.length > 0) llantaWhere.idLlanta = { [Op.notIn]: excluir };
 
-    // Primero con oferta
     const conOferta = await Llanta.findAll({
-      where: { ...baseWhere, precioOferta: { [Op.ne]: null } },
-      include: defaultInclude,
-      order: [["precio", "ASC"]],
+      where: llantaWhere,
+      include: [
+        {
+          model: Producto,
+          as: "producto",
+          where: { ...productoWhere, precioOferta: { [Op.ne]: null } },
+          include: [{ model: ImagenProducto, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false, attributes: ["urlImagen"] }],
+        },
+        { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
+      ],
       limit,
     });
 
     if (conOferta.length >= limit) return conOferta.slice(0, limit);
 
-    // Rellenar sin duplicar
     const idsUsados = conOferta.map((l) => l.idLlanta);
-    const whereRelleno = { ...baseWhere };
+    const whereRelleno = { ...llantaWhere };
     if ([...excluir, ...idsUsados].length > 0)
       whereRelleno.idLlanta = { [Op.notIn]: [...excluir, ...idsUsados] };
 
     const relleno = await Llanta.findAll({
       where: whereRelleno,
-      include: defaultInclude,
-      order: [["destacado", "DESC"], ["precio", "ASC"]],
+      include: [
+        {
+          model: Producto,
+          as: "producto",
+          where: productoWhere,
+          include: [{ model: ImagenProducto, as: "imagenes", where: { tipoImagen: "PRINCIPAL" }, required: false, attributes: ["urlImagen"] }],
+        },
+        { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
+      ],
       limit: limit - conOferta.length,
     });
 
     return [...conOferta, ...relleno].slice(0, limit);
   }
 
-  // Crear llanta
+  // Crear llanta (Admin) — recibe data de llanta + producto juntos
   async createLlanta(data) {
-    return Llanta.create(data);
+    const transaction = await sequelize.transaction();
+    try {
+      // 1. Crear producto base
+      const producto = await Producto.create({
+        tipoProducto: "LLANTA",
+        nombre: data.nombre,
+        precio: data.precio,
+        precioOferta: data.precioOferta,
+        stock: data.stock,
+        descripcion: data.descripcion,
+        activo: data.activo !== undefined ? data.activo : true,
+        destacado: data.destacado || false,
+      }, { transaction });
+
+      // 2. Crear llanta asociada
+      const llanta = await Llanta.create({
+        ...data,
+        idProducto: producto.idProducto,
+      }, { transaction });
+
+      await transaction.commit();
+      return this.getLlantaById(llanta.idLlanta);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
-  // Actualizar llanta
+  // Actualizar llanta (Admin)
   async updateLlanta(id, data) {
-    const llanta = await Llanta.findByPk(id);
+    const llanta = await Llanta.findByPk(id, { include: [{ model: Producto, as: "producto" }] });
     if (!llanta) throw new NotFoundError("Llanta no encontrada");
-    await llanta.update(data);
-    return llanta;
+
+    const transaction = await sequelize.transaction();
+    try {
+      // 1. Actualizar producto si hay campos relevantes
+      if (llanta.producto) {
+        const productoData = {};
+        if (data.nombre !== undefined) productoData.nombre = data.nombre;
+        if (data.precio !== undefined) productoData.precio = data.precio;
+        if (data.precioOferta !== undefined) productoData.precioOferta = data.precioOferta;
+        if (data.stock !== undefined) productoData.stock = data.stock;
+        if (data.descripcion !== undefined) productoData.descripcion = data.descripcion;
+        if (data.activo !== undefined) productoData.activo = data.activo;
+        if (data.destacado !== undefined) productoData.destacado = data.destacado;
+
+        if (Object.keys(productoData).length > 0) {
+          await llanta.producto.update(productoData, { transaction });
+        }
+      }
+
+      // 2. Actualizar llanta
+      await llanta.update(data, { transaction });
+
+      await transaction.commit();
+      return this.getLlantaById(id);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
-  // Eliminar llanta (soft delete)
+  // Eliminar llanta (soft delete en Producto)
   async deleteLlanta(id) {
-    const llanta = await Llanta.findByPk(id);
+    const llanta = await Llanta.findByPk(id, { include: [{ model: Producto, as: "producto" }] });
     if (!llanta) throw new NotFoundError("Llanta no encontrada");
-    await llanta.update({ activo: false });
-    return { message: "Llanta eliminada correctamente" };
+    if (llanta.producto) {
+      await llanta.producto.update({ activo: false });
+    }
+    return { message: "Llanta desactivada correctamente" };
   }
 }
 

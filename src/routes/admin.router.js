@@ -62,7 +62,7 @@ routerAdmin.patch(
 );
 
 // ─── Inventario ─────────────────────────────────
-routerAdmin.patch("/llantas/:id/stock", validateId, updateStockLlanta); // 🔒 Admin — actualizar stock de llanta
+routerAdmin.patch("/productos/:id/stock", validateId, updateStockLlanta); // 🔒 Admin — actualizar stock de producto
 
 // ─── Reportes ─────────────────────────────────
 routerAdmin.get("/reportes/ventas", getReporteVentas); // 🔒 Admin — reporte de ventas (?desde=&hasta=)

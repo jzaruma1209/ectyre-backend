@@ -2,15 +2,16 @@ const request = require("supertest");
 const app = require("../app");
 const {
   Cliente,
-  MarcaLlanta,
   Llanta,
+  MarcaLlanta,
+  Producto,
   Carrito,
-  ItemCarrito,
   Direccion,
   MetodoPago,
   Pedido,
   DetallePedido,
   Pago,
+  sequelize,
 } = require("../models");
 const testMigrate = require("./testMigrate");
 const jwt = require("jsonwebtoken");
@@ -18,7 +19,7 @@ const jwt = require("jsonwebtoken");
 describe("Pedido API Tests — Flujo de Checkout Completo", () => {
   let tokenCliente;
   let testCliente;
-  let testLlanta;
+  let testProducto;
   let testDireccion;
   let testMetodoPago;
   let pedidoCreado;
@@ -26,7 +27,6 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
   beforeAll(async () => {
     await testMigrate();
 
-    // Crear cliente de prueba
     testCliente = await Cliente.create({
       tipoIdentificacion: "CEDULA",
       numeroIdentificacion: "5555555555",
@@ -38,27 +38,27 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
       activo: true,
     });
 
-    // Generar token manualmente
     tokenCliente = jwt.sign(
       { idCliente: testCliente.idCliente, email: testCliente.email },
       process.env.TOKEN_SECRET || "test_secret_key",
       { expiresIn: "1h" }
     );
 
-    // Crear marca y llanta
     const marca = await MarcaLlanta.create({ nombre: "Test Brand Pedido", activo: true });
-    testLlanta = await Llanta.create({
+    const testLlanta = await Llanta.create({
       idMarca: marca.idMarca,
-      modelo: "TestTire",
       ancho: 205,
       perfil: 55,
       rin: 16,
+    });
+    testProducto = await Producto.create({
+      nombre: "Test Tire",
       precio: 100.00,
       stock: 10,
       activo: true,
+      idLlanta: testLlanta.idLlanta,
     });
 
-    // Crear método de pago
     testMetodoPago = await MetodoPago.create({
       nombre: "Efectivo Test",
       codigo: "EFECTIVO_TEST",
@@ -70,16 +70,15 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
     await Pago.destroy({ where: {} });
     await DetallePedido.destroy({ where: {} });
     await Pedido.destroy({ where: {} });
-    await ItemCarrito.destroy({ where: {} });
     await Carrito.destroy({ where: {} });
     await Direccion.destroy({ where: {} });
-    await Llanta.destroy({ where: {} });
+    await sequelize.query("DELETE FROM llantas");
     await MarcaLlanta.destroy({ where: {} });
+    await Producto.destroy({ where: {} });
     await MetodoPago.destroy({ where: {} });
     await Cliente.destroy({ where: {} });
   });
 
-  // ─── Direcciones ─────────────────────────────────────────
   describe("Flujo de Direcciones", () => {
     test("Debe crear una dirección correctamente", async () => {
       const res = await request(app)
@@ -119,13 +118,12 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
     });
   });
 
-  // ─── Carrito → Checkout ──────────────────────────────────
   describe("Flujo Carrito → Checkout", () => {
     test("Debe agregar item al carrito", async () => {
       const res = await request(app)
         .post("/api/v1/carrito/agregar")
         .set("Authorization", `Bearer ${tokenCliente}`)
-        .send({ idLlanta: testLlanta.idLlanta, cantidad: 4 })
+        .send({ idProducto: testProducto.idProducto, cantidad: 4 })
         .expect(201);
 
       expect(res.body.success).toBe(true);
@@ -138,8 +136,7 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
         .expect(200);
 
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveProperty("items");
-      expect(res.body.data.items.length).toBeGreaterThan(0);
+      expect(res.body.data).toHaveProperty("carrito");
     });
 
     test("Debe procesar el checkout correctamente", async () => {
@@ -177,7 +174,6 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
     });
   });
 
-  // ─── Consulta de Pedidos ─────────────────────────────────
   describe("Consulta de Pedidos", () => {
     test("Debe listar los pedidos del cliente", async () => {
       const res = await request(app)

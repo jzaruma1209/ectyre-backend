@@ -1400,13 +1400,13 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/llantas/1/stock",
+              "raw": "{{baseUrl}}/admin/productos/1/stock",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "llantas",
+                "productos",
                 "1",
                 "stock"
               ]
@@ -1527,13 +1527,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/admin/llantas/1/imagenes",
+              "raw": "{{baseUrl}}/admin/productos/1/imagenes",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "llantas",
+                "productos",
                 "1",
                 "imagenes"
               ]
@@ -1569,13 +1569,13 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/llantas/1/imagenes",
+              "raw": "{{baseUrl}}/admin/productos/1/imagenes",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "llantas",
+                "productos",
                 "1",
                 "imagenes"
               ]
@@ -1605,13 +1605,13 @@
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/llantas/1/imagenes/multiple",
+              "raw": "{{baseUrl}}/admin/productos/1/imagenes/multiple",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "llantas",
+                "productos",
                 "1",
                 "imagenes",
                 "multiple"
@@ -1631,13 +1631,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/admin/llantas/1/imagenes/1/principal",
+              "raw": "{{baseUrl}}/admin/productos/1/imagenes/1/principal",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "llantas",
+                "productos",
                 "1",
                 "imagenes",
                 "1",
@@ -2317,6 +2317,114 @@
               ],
               "query": []
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🖼️ Promociones",
+      "description": "Endpoints para gestionar las imágenes de promociones y banners.",
+      "item": [
+        {
+          "name": "Listar Promociones [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/promociones"
+          }
+        },
+        {
+          "name": "Detalle Promocion [🌍 Pública]",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/promociones/1"
+          }
+        },
+        {
+          "name": "Crear Promoción [👑 Admin]",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "imagen",
+                  "type": "file"
+                },
+                {
+                  "key": "nombre",
+                  "value": "Promo Verano",
+                  "type": "text"
+                },
+                {
+                  "key": "activo",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "idLlanta",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/promociones"
+          }
+        },
+        {
+          "name": "Actualizar Promoción [👑 Admin]",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombre",
+                  "value": "Promo Invierno",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/promociones/1"
+          }
+        },
+        {
+          "name": "Eliminar Promoción [👑 Admin]",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/promociones/1"
+          }
+        },
+        {
+          "name": "Toggle Activo Promoción [👑 Admin]",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/promociones/1/toggle"
           }
         }
       ]

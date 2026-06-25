@@ -2,26 +2,55 @@ const {
   Pedido,
   DetallePedido,
   Cliente,
+  Producto,
   Llanta,
   MarcaLlanta,
-  ImagenLlanta,
+  ImagenProducto,
   Carrito,
   ItemCarrito,
   Direccion,
+  MetodoPago,
+  Pago,
   sequelize,
 } = require("../models");
 const { Op } = require("sequelize");
 
+const detalleInclude = [
+  {
+    model: Producto,
+    as: "producto",
+    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo"],
+    include: [
+      {
+        model: Llanta,
+        as: "llanta",
+        attributes: ["idLlanta", "ancho", "perfil", "rin"],
+        include: [
+          {
+            model: MarcaLlanta,
+            as: "marca",
+            attributes: ["idMarca", "nombre"],
+          },
+        ],
+      },
+      {
+        model: ImagenProducto,
+        as: "imagenes",
+        where: { tipoImagen: "PRINCIPAL" },
+        required: false,
+        attributes: ["urlImagen"],
+        limit: 1,
+      },
+    ],
+  },
+];
+
 class AdminService {
-  // ─────────────────────────────────────────────
-  // DASHBOARD — métricas generales
-  // ─────────────────────────────────────────────
   async getDashboard() {
     const ahora = new Date();
     const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
     const inicioMesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
 
-    // Helper para ejecutar cada sub-query de forma segura con fallback
     const safe = async (label, fn, fallback) => {
       try {
         return await fn();
@@ -38,7 +67,6 @@ class AdminService {
       }
     };
 
-    // Ejecutar todas las queries de forma independiente con fallbacks
     const [ventasTotales, ventasMes, ventasMesAnterior] = await Promise.all([
       safe("ventasTotales", () =>
         Pedido.sum("total", { where: { estado: { [Op.ne]: "CANCELADO" } } }), 0),
@@ -82,51 +110,55 @@ class AdminService {
         ],
       }), []);
 
-    // Productos más vendidos — Raw SQL con QueryTypes.SELECT explícito
     const productosMasVendidos = await safe("productosMasVendidos", async () => {
       const productosMasVendidosRaw = await sequelize.query(
         `SELECT
-          dp.id_llanta                          AS "idLlanta",
-          SUM(dp.cantidad)                      AS "unidadesVendidas",
-          SUM(dp.subtotal)                      AS "totalGenerado",
-          l.id_llanta                           AS "llantaIdLlanta",
-          l.modelo                              AS "llantaModelo",
-          l.ancho                               AS "llantaAncho",
-          l.perfil                              AS "llantaPerfil",
-          l.rin                                 AS "llantaRin",
-          l.precio                              AS "llantaPrecio",
-          l.stock                               AS "llantaStock",
-          m.id_marca                            AS "marcaIdMarca",
-          m.nombre                              AS "marcaNombre",
-          MIN(img.url_imagen)                   AS "imagenPrincipal"
+          dp.id_producto                    AS "idProducto",
+          SUM(dp.cantidad)                  AS "unidadesVendidas",
+          SUM(dp.subtotal)                  AS "totalGenerado",
+          p.id_producto                     AS "productoIdProducto",
+          p.nombre                          AS "productoNombre",
+          p.precio                          AS "productoPrecio",
+          p.stock                           AS "productoStock",
+          l.id_llanta                       AS "llantaIdLlanta",
+          l.ancho                           AS "llantaAncho",
+          l.perfil                          AS "llantaPerfil",
+          l.rin                             AS "llantaRin",
+          m.id_marca                        AS "marcaIdMarca",
+          m.nombre                          AS "marcaNombre",
+          MIN(img.url_imagen)               AS "imagenPrincipal"
         FROM detalle_pedido dp
         INNER JOIN pedidos p   ON p.id_pedido  = dp.id_pedido  AND p.estado <> 'CANCELADO'
-        INNER JOIN llantas  l  ON l.id_llanta  = dp.id_llanta
+        INNER JOIN productos  prod ON prod.id_producto = dp.id_producto
+        INNER JOIN llantas  l  ON l.id_llanta = prod.id_llanta
         INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
-        LEFT  JOIN imagenes_llantas img
-               ON img.id_llanta = l.id_llanta AND img.tipo_imagen = 'PRINCIPAL'
-        GROUP BY dp.id_llanta, l.id_llanta, l.modelo, l.ancho, l.perfil, l.rin,
-                 l.precio, l.stock, m.id_marca, m.nombre
+        LEFT  JOIN imagenes_productos img
+               ON img.id_producto = prod.id_producto AND img.tipo_imagen = 'PRINCIPAL'
+        GROUP BY dp.id_producto, prod.id_producto, prod.nombre, prod.precio, prod.stock,
+                 l.id_llanta, l.ancho, l.perfil, l.rin, m.id_marca, m.nombre
         ORDER BY SUM(dp.cantidad) DESC
         LIMIT 5`,
         { type: sequelize.QueryTypes.SELECT }
       );
 
       return productosMasVendidosRaw.map((row) => ({
-        idLlanta: row.idLlanta,
+        idProducto: row.idProducto,
         unidadesVendidas: Number(row.unidadesVendidas),
         totalGenerado: Number(row.totalGenerado),
-        llanta: {
-          idLlanta: row.llantaIdLlanta,
-          modelo: row.llantaModelo,
-          ancho: row.llantaAncho,
-          perfil: row.llantaPerfil,
-          rin: row.llantaRin,
-          precio: row.llantaPrecio,
-          stock: row.llantaStock,
-          marca: {
-            idMarca: row.marcaIdMarca,
-            nombre: row.marcaNombre,
+        producto: {
+          idProducto: row.productoIdProducto,
+          nombre: row.productoNombre,
+          precio: row.productoPrecio,
+          stock: row.productoStock,
+          llanta: {
+            idLlanta: row.llantaIdLlanta,
+            ancho: row.llantaAncho,
+            perfil: row.llantaPerfil,
+            rin: row.llantaRin,
+            marca: {
+              idMarca: row.marcaIdMarca,
+              nombre: row.marcaNombre,
+            },
           },
           imagenes: row.imagenPrincipal
             ? [{ urlImagen: row.imagenPrincipal }]
@@ -143,11 +175,18 @@ class AdminService {
     ]);
 
     const stockBajo = await safe("stockBajo", () =>
-      Llanta.findAll({
+      Producto.findAll({
         where: { stock: { [Op.lt]: 5 }, activo: true },
-        attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin", "stock"],
+        attributes: ["idProducto", "nombre", "precio", "stock"],
         include: [
-          { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre"] },
+          {
+            model: Llanta,
+            as: "llanta",
+            attributes: ["idLlanta", "ancho", "perfil", "rin"],
+            include: [
+              { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre"] },
+            ],
+          },
         ],
         order: [["stock", "ASC"]],
         limit: 10,
@@ -275,7 +314,6 @@ class AdminService {
         throw new Error("Pedido no encontrado");
       }
 
-      // No se puede reabrir un pedido ya entregado o cancelado
       if (["ENTREGADO", "CANCELADO"].includes(pedido.estado)) {
         throw new Error(`No se puede modificar un pedido en estado ${pedido.estado}`);
       }
@@ -351,28 +389,7 @@ class AdminService {
           {
             model: DetallePedido,
             as: "detalles",
-            include: [
-              {
-                model: Llanta,
-                as: "llanta",
-                attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin", "precio"],
-                include: [
-                  {
-                    model: MarcaLlanta,
-                    as: "marca",
-                    attributes: ["nombre"],
-                  },
-                  {
-                    model: ImagenLlanta,
-                    as: "imagenes",
-                    where: { tipoImagen: "PRINCIPAL" },
-                    required: false,
-                    attributes: ["urlImagen"],
-                    limit: 1,
-                  },
-                ],
-              },
-            ],
+            include: detalleInclude,
           },
         ],
       });
@@ -408,11 +425,18 @@ class AdminService {
             attributes: ["cantidad", "precioUnitario", "subtotal"],
             include: [
               {
-                model: Llanta,
-                as: "llanta",
-                attributes: ["modelo", "ancho", "perfil", "rin"],
+                model: Producto,
+                as: "producto",
+                attributes: ["idProducto", "nombre", "precio"],
                 include: [
-                  { model: MarcaLlanta, as: "marca", attributes: ["nombre"] },
+                  {
+                    model: Llanta,
+                    as: "llanta",
+                    attributes: ["ancho", "perfil", "rin"],
+                    include: [
+                      { model: MarcaLlanta, as: "marca", attributes: ["nombre"] },
+                    ],
+                  },
                 ],
               },
             ],
@@ -435,26 +459,30 @@ class AdminService {
   }
 
   // ─────────────────────────────────────────────
-  // INVENTARIO — actualizar stock de una llanta
+  // INVENTARIO — actualizar stock
   // ─────────────────────────────────────────────
-  async updateStockLlanta(idLlanta, stock) {
+  async updateStockLlanta(idProducto, stock) {
     try {
       if (stock === undefined || stock === null || isNaN(stock) || stock < 0) {
         throw new Error("El stock debe ser un número mayor o igual a 0");
       }
 
-      const llanta = await Llanta.findByPk(idLlanta);
-      if (!llanta) {
-        throw new Error("Llanta no encontrada");
+      const producto = await Producto.findByPk(idProducto, {
+        include: [
+          {
+            model: Llanta,
+            as: "llanta",
+            include: [{ model: MarcaLlanta, as: "marca", attributes: ["nombre"] }],
+          },
+        ],
+      });
+      if (!producto) {
+        throw new Error("Producto no encontrado");
       }
 
-      await llanta.update({ stock: parseInt(stock) });
+      await producto.update({ stock: parseInt(stock) });
 
-      const actualizada = await Llanta.findByPk(idLlanta, {
-        attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin", "stock", "activo"],
-        include: [{ model: MarcaLlanta, as: "marca", attributes: ["nombre"] }],
-      });
-      return actualizada;
+      return producto;
     } catch (error) {
       throw new Error(`Error al actualizar stock: ${error.message}`);
     }
@@ -474,11 +502,9 @@ class AdminService {
         createdAt: { [Op.between]: [fechaDesde, fechaHasta] },
       };
 
-      // Total de ventas en el período
       const totalVentas = await Pedido.sum("total", { where }) || 0;
       const totalPedidos = await Pedido.count({ where });
 
-      // Ventas agrupadas por día
       const ventasPorDia = await Pedido.findAll({
         where,
         attributes: [
@@ -491,7 +517,6 @@ class AdminService {
         raw: true,
       });
 
-      // Ventas por estado
       const ventasPorEstado = await Pedido.findAll({
         where: { createdAt: { [Op.between]: [fechaDesde, fechaHasta] } },
         attributes: [
@@ -543,29 +568,30 @@ class AdminService {
 
       const productosRaw = await sequelize.query(
         `SELECT
-          dp.id_llanta                  AS "idLlanta",
-          SUM(dp.cantidad)              AS "unidadesVendidas",
-          SUM(dp.subtotal)              AS "totalGenerado",
-          COUNT(dp.id_pedido)           AS "vecesComprado",
-          l.id_llanta                   AS "llantaIdLlanta",
-          l.modelo                      AS "llantaModelo",
-          l.ancho                       AS "llantaAncho",
-          l.perfil                      AS "llantaPerfil",
-          l.rin                         AS "llantaRin",
-          l.precio                      AS "llantaPrecio",
-          l.stock                       AS "llantaStock",
-          m.nombre                      AS "marcaNombre",
-          MIN(img.url_imagen)           AS "imagenPrincipal"
+          dp.id_producto                    AS "idProducto",
+          SUM(dp.cantidad)                  AS "unidadesVendidas",
+          SUM(dp.subtotal)                  AS "totalGenerado",
+          COUNT(dp.id_pedido)               AS "vecesComprado",
+          prod.id_producto                  AS "productoIdProducto",
+          prod.nombre                       AS "productoNombre",
+          prod.precio                       AS "productoPrecio",
+          prod.stock                        AS "productoStock",
+          l.ancho                           AS "llantaAncho",
+          l.perfil                          AS "llantaPerfil",
+          l.rin                             AS "llantaRin",
+          m.nombre                          AS "marcaNombre",
+          MIN(img.url_imagen)               AS "imagenPrincipal"
         FROM detalle_pedido dp
         INNER JOIN pedidos p  ON p.id_pedido = dp.id_pedido
                               AND p.estado <> 'CANCELADO'
                               AND p.created_at BETWEEN :desde AND :hasta
-        INNER JOIN llantas l  ON l.id_llanta = dp.id_llanta
+        INNER JOIN productos prod ON prod.id_producto = dp.id_producto
+        INNER JOIN llantas l  ON l.id_llanta = prod.id_llanta
         INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
-        LEFT  JOIN imagenes_llantas img
-               ON img.id_llanta = l.id_llanta AND img.tipo_imagen = 'PRINCIPAL'
-        GROUP BY dp.id_llanta, l.id_llanta, l.modelo, l.ancho, l.perfil, l.rin,
-                 l.precio, l.stock, m.id_marca, m.nombre
+        LEFT  JOIN imagenes_productos img
+               ON img.id_producto = prod.id_producto AND img.tipo_imagen = 'PRINCIPAL'
+        GROUP BY dp.id_producto, prod.id_producto, prod.nombre, prod.precio, prod.stock,
+                 l.id_llanta, l.ancho, l.perfil, l.rin, m.id_marca, m.nombre
         ORDER BY SUM(dp.cantidad) DESC
         LIMIT :limit`,
         {
@@ -583,19 +609,21 @@ class AdminService {
       }
 
       const productos = productosRaw.map((row) => ({
-        idLlanta: row.idLlanta,
+        idProducto: row.idProducto,
         unidadesVendidas: Number(row.unidadesVendidas) || 0,
         totalGenerado: Number(row.totalGenerado) || 0,
         vecesComprado: Number(row.vecesComprado) || 0,
-        llanta: {
-          idLlanta: row.llantaIdLlanta,
-          modelo: row.llantaModelo,
-          ancho: row.llantaAncho,
-          perfil: row.llantaPerfil,
-          rin: row.llantaRin,
-          precio: row.llantaPrecio,
-          stock: row.llantaStock,
-          marca: { nombre: row.marcaNombre },
+        producto: {
+          idProducto: row.productoIdProducto,
+          nombre: row.productoNombre,
+          precio: row.productoPrecio,
+          stock: row.productoStock,
+          llanta: {
+            ancho: row.llantaAncho,
+            perfil: row.llantaPerfil,
+            rin: row.llantaRin,
+            marca: { nombre: row.marcaNombre },
+          },
           imagenes: row.imagenPrincipal
             ? [{ urlImagen: row.imagenPrincipal }]
             : [],
@@ -617,7 +645,6 @@ class AdminService {
   // ─────────────────────────────────────────────
   async getStatsCarritos() {
     try {
-      // Conteo por estado
       const porEstado = await Carrito.findAll({
         attributes: [
           "estado",
@@ -627,18 +654,15 @@ class AdminService {
         raw: true,
       });
 
-      // Carritos activos (con items)
       const activos = await Carrito.count({ where: { estado: "ACTIVO" } });
       const abandonados = await Carrito.count({ where: { estado: "ABANDONADO" } });
       const convertidos = await Carrito.count({ where: { estado: "CONVERTIDO" } });
 
-      // Tasa de conversión
       const totalNoVacíos = activos + abandonados + convertidos;
       const tasaConversion = totalNoVacíos > 0
         ? ((convertidos / totalNoVacíos) * 100).toFixed(1)
         : 0;
 
-      // Carritos abandonados en las últimas 24h
       const hace24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const abandonadosRecientes = await Carrito.count({
         where: {
@@ -647,7 +671,6 @@ class AdminService {
         },
       });
 
-      // Carritos de clientes registrados vs invitados
       const conCliente = await Carrito.count({
         where: { idCliente: { [Op.ne]: null } },
       });

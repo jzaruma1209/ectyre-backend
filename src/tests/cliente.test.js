@@ -34,11 +34,12 @@ describe("Cliente API Tests", () => {
         .expect(201);
 
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveProperty("idCliente");
-      expect(res.body.data.email).toBe(clienteData.email);
-      expect(res.body.data).not.toHaveProperty("passwordHash");
+      expect(res.body.data).toHaveProperty("cliente");
+      expect(res.body.data.cliente).toHaveProperty("idCliente");
+      expect(res.body.data.cliente.email).toBe(clienteData.email);
+      expect(res.body.data.cliente).not.toHaveProperty("passwordHash");
 
-      testCliente = res.body.data;
+      testCliente = res.body.data.cliente;
     });
 
     test("Debe fallar si el email ya existe", async () => {

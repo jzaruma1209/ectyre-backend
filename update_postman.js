@@ -160,8 +160,212 @@ if (!hasAuthFolder) {
 }
 
 // Update counts in description
-data.info.description = data.info.description.replace(/42 total/g, "52 total");
-data.info.description = data.info.description.replace(/Total \| 42 \| 11 \| 16 \| 15/g, "Total | 52 | 16 | 16 | 20");
+const hasPromociones = data.item.some(i => i.name === '🖼️ Promociones');
+if (!hasPromociones) {
+  data.item.push({
+    "name": "🖼️ Promociones",
+    "description": "Endpoints para gestionar las imágenes de promociones y banners.",
+    "item": [
+      {
+        "name": "Listar Promociones [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/promociones" }
+      },
+      {
+        "name": "Detalle Promocion [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/admin/promociones/1" }
+      },
+      {
+        "name": "Crear Promoción [👑 Admin]",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+          "body": {
+            "mode": "formdata",
+            "formdata": [
+              { "key": "imagen", "type": "file" },
+              { "key": "nombre", "value": "Promo Verano", "type": "text" },
+              { "key": "activo", "value": "true", "type": "text" },
+              { "key": "idLlanta", "value": "1", "type": "text" }
+            ]
+          },
+          "url": "{{baseUrl}}/admin/promociones"
+        }
+      },
+      {
+        "name": "Actualizar Promoción [👑 Admin]",
+        "request": {
+          "method": "PUT",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+          "body": {
+            "mode": "formdata",
+            "formdata": [
+              { "key": "nombre", "value": "Promo Invierno", "type": "text" }
+            ]
+          },
+          "url": "{{baseUrl}}/admin/promociones/1"
+        }
+      },
+      {
+        "name": "Eliminar Promoción [👑 Admin]",
+        "request": {
+          "method": "DELETE",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+          "url": "{{baseUrl}}/admin/promociones/1"
+        }
+      },
+      {
+        "name": "Toggle Activo Promoción [👑 Admin]",
+        "request": {
+          "method": "PATCH",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+          "url": "{{baseUrl}}/admin/promociones/1/toggle"
+        }
+      }
+    ]
+  });
+}
+
+// Check for Vehículos folder
+const hasVehiculosFolder = data.item.some(i => i.name === '🚗 Vehículos');
+if (!hasVehiculosFolder) {
+  data.item.push({
+    "name": "🚗 Vehículos",
+    "description": "Catálogo de vehículos, marcas y modelos.",
+    "item": [
+      {
+        "name": "Listar marcas activas [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/vehiculos/marcas" }
+      },
+      {
+        "name": "Marcas + modelos anidados [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/vehiculos/marcas/completo" }
+      },
+      {
+        "name": "Modelos de una marca [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/vehiculos/marcas/1/modelos" }
+      }
+    ]
+  });
+}
+
+// Check for Compatibilidad folder
+const hasCompatibilidadFolder = data.item.some(i => i.name === '🔗 Compatibilidad');
+if (!hasCompatibilidadFolder) {
+  data.item.push({
+    "name": "🔗 Compatibilidad",
+    "description": "Compatibilidad entre llantas y vehículos.",
+    "item": [
+      {
+        "name": "Llantas por vehículo [🌍 Pública]",
+        "request": { 
+          "method": "GET", 
+          "header": [], 
+          "url": {
+            "raw": "{{baseUrl}}/compatibilidad/vehiculo?idModelo=1&anio=2020",
+            "host": ["{{baseUrl}}"],
+            "path": ["compatibilidad", "vehiculo"],
+            "query": [
+              { "key": "idModelo", "value": "1" },
+              { "key": "anio", "value": "2020" }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Vehículos por llanta [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/compatibilidad/llanta/1" }
+      },
+      {
+        "name": "Detalle de compatibilidad [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/compatibilidad/1" }
+      },
+      {
+        "name": "Crear compatibilidad [👑 Admin]",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"idLlanta\": 1,\n  \"idModelo\": 1,\n  \"anioInicio\": 2015,\n  \"anioFin\": 2022\n}"
+          },
+          "url": "{{baseUrl}}/compatibilidad"
+        }
+      },
+      {
+        "name": "Actualizar compatibilidad [👑 Admin]",
+        "request": {
+          "method": "PUT",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"anioInicio\": 2016\n}"
+          },
+          "url": "{{baseUrl}}/compatibilidad/1"
+        }
+      },
+      {
+        "name": "Eliminar compatibilidad [👑 Admin]",
+        "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }], "url": "{{baseUrl}}/compatibilidad/1" }
+      }
+    ]
+  });
+}
+
+// Check for Catálogos folder
+const hasCatalogosFolder = data.item.some(i => i.name === '📋 Catálogos');
+if (!hasCatalogosFolder) {
+  data.item.push({
+    "name": "📋 Catálogos",
+    "description": "Catálogos generales del sistema.",
+    "item": [
+      {
+        "name": "Todos los catálogos en uno [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos" }
+      },
+      {
+        "name": "Listar Modelos de Llanta [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos/modelos-llanta" }
+      },
+      {
+        "name": "Crear Modelo de Llanta [👑 Admin]",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"nombre\": \"Pilot Sport 4\",\n  \"idMarca\": 1\n}"
+          },
+          "url": "{{baseUrl}}/catalogos/modelos-llanta"
+        }
+      },
+      {
+        "name": "Listar Índices de Carga [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos/indices-carga" }
+      },
+      {
+        "name": "Listar Índices de Velocidad [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos/indices-velocidad" }
+      },
+      {
+        "name": "Listar Temperaturas [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos/temperaturas" }
+      },
+      {
+        "name": "Listar Tipos de Llanta [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos/tipos-llanta" }
+      },
+      {
+        "name": "Listar Sentidos de Rotación [🌍 Pública]",
+        "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/catalogos/sentidos-rotacion" }
+      }
+    ]
+  });
+}
+
+data.info.description = data.info.description.replace(/52 total/g, "84 total");
+data.info.description = data.info.description.replace(/42 total/g, "84 total");
+data.info.description = data.info.description.replace(/Total \| 52 \| 16 \| 16 \| 20/g, "Total | 84 | 45 | 5 | 11 | 23");
+data.info.description = data.info.description.replace(/Total \| 42 \| 11 \| 16 \| 15/g, "Total | 84 | 45 | 5 | 11 | 23");
 
 fs.writeFileSync(postmanFile, JSON.stringify(data, null, 2));
-console.log('Postman collection updated successfully!');
+console.log('Postman collection updated successfully with new endpoints!');

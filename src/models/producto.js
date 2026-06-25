@@ -5,9 +5,9 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Producto extends Model {
     static associate(models) {
-      // Un producto tiene una llanta asociada (1:1)
-      this.hasOne(models.Llanta, {
-        foreignKey: "idProducto",
+      // Un producto pertenece a una llanta (FK id_llanta vive aquí en productos)
+      this.belongsTo(models.Llanta, {
+        foreignKey: "idLlanta",
         as: "llanta",
       });
 
@@ -91,6 +91,16 @@ module.exports = (sequelize, DataTypes) => {
           key: "id_imagen_promocion",
         },
       },
+      idLlanta: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: "id_llanta",
+        references: {
+          model: "llantas",
+          key: "id_llanta",
+        },
+        onDelete: "RESTRICT",
+      },
     },
     {
       sequelize,
@@ -102,6 +112,7 @@ module.exports = (sequelize, DataTypes) => {
         { fields: ["activo"] },
         { fields: ["destacado"] },
         { fields: ["tipo_producto"] },
+        { fields: ["id_llanta"] },
       ],
     }
   );

@@ -3,14 +3,8 @@
 const imagenService = require("../services/imagen.services");
 const catchError = require("../utils/catchError");
 
-// ─────────────────────────────────────────────────────────────────────
-// IMÁGENES DE LLANTAS
-// ─────────────────────────────────────────────────────────────────────
-
-// Subir una imagen a una llanta (Admin)
-// POST /api/v1/admin/llantas/:id/imagenes
-const uploadImagenLlanta = catchError(async (req, res) => {
-  const { id: idLlanta } = req.params;
+const uploadImagenProducto = catchError(async (req, res) => {
+  const { id: idProducto } = req.params;
 
   if (!req.file) {
     return res.status(400).json({
@@ -21,10 +15,10 @@ const uploadImagenLlanta = catchError(async (req, res) => {
 
   const { tipoImagen = "DETALLE", orden = 0 } = req.body;
 
-  const imagen = await imagenService.addImagenToLlanta({
-    idLlanta: parseInt(idLlanta),
-    urlImagen: req.file.path,   // Cloudinary devuelve la URL segura
-    publicId: req.file.filename, // multer-storage-cloudinary devuelve el public_id en filename
+  const imagen = await imagenService.addImagenToProducto({
+    idProducto: parseInt(idProducto),
+    urlImagen: req.file.path,
+    publicId: req.file.filename,
     bytes: req.file.size,
     formato: req.file.mimetype,
     tipoImagen,
@@ -38,10 +32,8 @@ const uploadImagenLlanta = catchError(async (req, res) => {
   });
 });
 
-// Subir múltiples imágenes a una llanta (Admin)
-// POST /api/v1/admin/llantas/:id/imagenes/multiple
-const uploadImagenesLlanta = catchError(async (req, res) => {
-  const { id: idLlanta } = req.params;
+const uploadImagenesProducto = catchError(async (req, res) => {
+  const { id: idProducto } = req.params;
 
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({
@@ -54,8 +46,8 @@ const uploadImagenesLlanta = catchError(async (req, res) => {
 
   const imagenes = await Promise.all(
     req.files.map((file, index) =>
-      imagenService.addImagenToLlanta({
-        idLlanta: parseInt(idLlanta),
+      imagenService.addImagenToProducto({
+        idProducto: parseInt(idProducto),
         urlImagen: file.path,
         publicId: file.filename,
         bytes: file.size,
@@ -73,11 +65,9 @@ const uploadImagenesLlanta = catchError(async (req, res) => {
   });
 });
 
-// Obtener todas las imágenes de una llanta (Público)
-// GET /api/v1/admin/llantas/:id/imagenes
-const getImagenesLlanta = catchError(async (req, res) => {
-  const { id: idLlanta } = req.params;
-  const imagenes = await imagenService.getImagenesByLlanta(parseInt(idLlanta));
+const getImagenesProducto = catchError(async (req, res) => {
+  const { id: idProducto } = req.params;
+  const imagenes = await imagenService.getImagenesByProducto(parseInt(idProducto));
 
   res.status(200).json({
     success: true,
@@ -86,8 +76,6 @@ const getImagenesLlanta = catchError(async (req, res) => {
   });
 });
 
-// Eliminar una imagen específica (Admin)
-// DELETE /api/v1/admin/imagenes/:idImagen
 const deleteImagen = catchError(async (req, res) => {
   const { idImagen } = req.params;
   const result = await imagenService.deleteImagen(parseInt(idImagen));
@@ -98,12 +86,10 @@ const deleteImagen = catchError(async (req, res) => {
   });
 });
 
-// Establecer imagen como PRINCIPAL (Admin)
-// PATCH /api/v1/admin/llantas/:id/imagenes/:idImagen/principal
 const setPrincipalImagen = catchError(async (req, res) => {
-  const { id: idLlanta, idImagen } = req.params;
+  const { id: idProducto, idImagen } = req.params;
   const imagen = await imagenService.setPrincipal(
-    parseInt(idLlanta),
+    parseInt(idProducto),
     parseInt(idImagen)
   );
 
@@ -115,9 +101,9 @@ const setPrincipalImagen = catchError(async (req, res) => {
 });
 
 module.exports = {
-  uploadImagenLlanta,
-  uploadImagenesLlanta,
-  getImagenesLlanta,
+  uploadImagenProducto,
+  uploadImagenesProducto,
+  getImagenesProducto,
   deleteImagen,
   setPrincipalImagen,
 };

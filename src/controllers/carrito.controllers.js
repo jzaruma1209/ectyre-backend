@@ -3,10 +3,11 @@ const catchError = require("../utils/catchError");
 
 // Obtener carrito
 const getCarrito = catchError(async (req, res) => {
-  const idCliente = req.user?.idCliente;
+  const idCliente = req.user?.idCliente || req.body.idCliente;
   const sesionId = req.query.sesionId;
 
-  const carrito = await carritoService.getOrCreateCarrito(idCliente, sesionId);
+  const carritoExistente = await carritoService.getOrCreateCarrito(idCliente, sesionId);
+  const carrito = await carritoService.getCarritoDetallado(carritoExistente.idCarrito);
 
   res.status(200).json({
     success: true,
@@ -17,24 +18,22 @@ const getCarrito = catchError(async (req, res) => {
 
 // Agregar item al carrito
 const agregarItem = catchError(async (req, res) => {
-  const idCliente = req.user?.idCliente;
+  const idCliente = req.user?.idCliente || req.body.idCliente;
   const sesionId = req.body.sesionId;
-  const { idLlanta, cantidad } = req.body;
+  const { idProducto, cantidad } = req.body;
 
-  // Obtener o crear carrito
   const carritoExistente = await carritoService.getOrCreateCarrito(
     idCliente,
     sesionId
   );
 
-  // Agregar item
   const carrito = await carritoService.agregarItem(
-    carritoExistente.carrito.idCarrito,
-    idLlanta,
+    carritoExistente.idCarrito,
+    idProducto,
     cantidad
   );
 
-  res.status(200).json({
+  res.status(201).json({
     success: true,
     message: "Producto agregado al carrito",
     data: carrito,
@@ -70,7 +69,7 @@ const eliminarItem = catchError(async (req, res) => {
 
 // Vaciar carrito
 const vaciarCarrito = catchError(async (req, res) => {
-  const idCliente = req.user?.idCliente;
+  const idCliente = req.user?.idCliente || req.body.idCliente;
   const sesionId = req.query.sesionId;
 
   const carritoExistente = await carritoService.getOrCreateCarrito(
@@ -78,7 +77,7 @@ const vaciarCarrito = catchError(async (req, res) => {
     sesionId
   );
   const result = await carritoService.vaciarCarrito(
-    carritoExistente.carrito.idCarrito
+    carritoExistente.idCarrito
   );
 
   res.status(200).json({

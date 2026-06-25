@@ -2,9 +2,9 @@
 
 const express = require("express");
 const {
-  uploadImagenLlanta,
-  uploadImagenesLlanta,
-  getImagenesLlanta,
+  uploadImagenProducto,
+  uploadImagenesProducto,
+  getImagenesProducto,
   deleteImagen,
   setPrincipalImagen,
 } = require("../controllers/imagen.controllers");
@@ -16,31 +16,29 @@ const {
 
 const router = express.Router();
 
-// ─── Rutas de imágenes de llantas ────────────────────────────────────
-
-// GET  /api/v1/admin/llantas/:id/imagenes         🌍 Público
-// POST /api/v1/admin/llantas/:id/imagenes         👑 Admin — sube 1 imagen
+// GET  /api/v1/admin/productos/:id/imagenes         🌍 Público
+// POST /api/v1/admin/productos/:id/imagenes         👑 Admin — sube 1 imagen
 router
-  .route("/llantas/:id/imagenes")
-  .get(getImagenesLlanta) // 🌍 Público
-  .post(verifyJWT, multerSingle, uploadImagenLlanta); // 👑 Admin
+  .route("/productos/:id/imagenes")
+  .get(getImagenesProducto)
+  .post(verifyJWT, multerSingle, uploadImagenProducto);
 
-// POST /api/v1/admin/llantas/:id/imagenes/multiple  👑 Admin — sube hasta 5 imágenes
+// POST /api/v1/admin/productos/:id/imagenes/multiple  👑 Admin — sube hasta 5 imágenes
 router.post(
-  "/llantas/:id/imagenes/multiple",
+  "/productos/:id/imagenes/multiple",
   verifyJWT,
   multerMultiple,
-  uploadImagenesLlanta
-); // 👑 Admin
+  uploadImagenesProducto
+);
 
-// PATCH /api/v1/admin/llantas/:id/imagenes/:idImagen/principal  👑 Admin
+// PATCH /api/v1/admin/productos/:id/imagenes/:idImagen/principal  👑 Admin
 router.patch(
-  "/llantas/:id/imagenes/:idImagen/principal",
+  "/productos/:id/imagenes/:idImagen/principal",
   verifyJWT,
   setPrincipalImagen
-); // 👑 Admin
+);
 
 // DELETE /api/v1/admin/imagenes/:idImagen  👑 Admin
-router.delete("/imagenes/:idImagen", verifyJWT, deleteImagen); // 👑 Admin
+router.delete("/imagenes/:idImagen", verifyJWT, deleteImagen);
 
 module.exports = router;

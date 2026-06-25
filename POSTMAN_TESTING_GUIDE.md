@@ -1,6 +1,6 @@
-# 🛞 Guía Completa de Testing — Ectyre API v1.0.2
+# 🛞 Guía Completa de Testing — Ectyre API v1.1.0
 
-> Toda la información necesaria para testear la API en Postman. **52 endpoints reales** verificados contra el código fuente.
+> Toda la información necesaria para testear la API en Postman. **86 endpoints reales** verificados contra el código fuente.
 
 ---
 
@@ -52,7 +52,7 @@ Crear un Environment llamado **"Ectyre API - Local"** con estas variables:
 
 ---
 
-## 📊 Resumen de Endpoints (52 en total)
+## 📊 Resumen de Endpoints (86 en total)
 
 | Módulo | Total | Públicos 🌍 | Auth Opcional 🌍/🔒 | JWT 🔒 | Admin 👑 |
 |--------|-------|------------|---------------------|--------|---------|
@@ -66,7 +66,10 @@ Crear un Environment llamado **"Ectyre API - Local"** con estas variables:
 | Direcciones | 4 | 0 | 0 | 4 | 0 |
 | Admin — General | 12 | 0 | 0 | 0 | 12 |
 | Admin — Imágenes | 5 | 1 | 0 | 0 | 4 |
-| **Total** | **52** | **17** | **5** | **11** | **19** |
+| Catálogos | 22 | 8 | 0 | 0 | 14 |
+| Compatibilidad | 6 | 3 | 0 | 0 | 3 |
+| Promociones | 6 | 2 | 0 | 0 | 4 |
+| **Total** | **86** | **30** | **5** | **11** | **40** |
 
 ---
 
@@ -695,6 +698,50 @@ Authorization: Bearer {{adminToken}}
 
 ---
 
+### 📋 11. Catálogos (22 endpoints)
+
+> **Rutas Públicas (8):**
+> `GET /catalogos` (Todos)
+> `GET /catalogos/modelos-llanta`, `GET /catalogos/modelos-llanta/:id`
+> `GET /catalogos/indices-carga`, `GET /catalogos/indices-velocidad`, `GET /catalogos/temperaturas`, `GET /catalogos/tipos-llanta`, `GET /catalogos/sentidos-rotacion`
+>
+> **Rutas Admin (14):**
+> `POST /catalogos/modelos-llanta`, `PUT /catalogos/modelos-llanta/:id`, `DELETE /catalogos/modelos-llanta/:id`
+> `POST /catalogos/indices-carga`, `DELETE /catalogos/indices-carga/:id`
+> `POST /catalogos/indices-velocidad`, `DELETE /catalogos/indices-velocidad/:id`
+> `POST /catalogos/temperaturas`, `DELETE /catalogos/temperaturas/:id`
+> `POST /catalogos/tipos-llanta`, `PUT /catalogos/tipos-llanta/:id`, `DELETE /catalogos/tipos-llanta/:id`
+> `POST /catalogos/sentidos-rotacion`, `DELETE /catalogos/sentidos-rotacion/:id`
+
+---
+
+### 🔗 12. Compatibilidad (6 endpoints)
+
+> **Rutas Públicas (3):**
+> `GET /compatibilidad/vehiculo?idModelo=1&anio=2020` (Llantas para vehículo)
+> `GET /compatibilidad/llanta/1` (Vehículos compatibles con llanta)
+> `GET /compatibilidad/1` (Detalle de registro)
+>
+> **Rutas Admin (3):**
+> `POST /compatibilidad`
+> `PUT /compatibilidad/1`
+> `DELETE /compatibilidad/1`
+
+---
+
+### 🖼️ 13. Promociones (6 endpoints)
+
+> **Rutas Públicas (2):**
+> `GET /admin/promociones`, `GET /admin/promociones/1`
+>
+> **Rutas Admin (4):**
+> `POST /admin/promociones` (form-data: `imagen`, `nombre`, `activo`, `idLlanta`)
+> `PUT /admin/promociones/1` (form-data)
+> `DELETE /admin/promociones/1`
+> `PATCH /admin/promociones/1/toggle`
+
+---
+
 ## ✅ Flujo de Testing Recomendado
 
 1. **Health Check** → `GET /` y `GET /health`
@@ -757,4 +804,4 @@ Toyota (1), Chevrolet (2), Hyundai (3), Kia (4), Mazda (5), Ford (6), Nissan (7)
 
 ---
 
-*Ectyre API v1.0.2 — Última actualización: 2026-06-04 — 52 endpoints verificados contra el código fuente*
+*Ectyre API v1.1.0 — Última actualización: 2026-06-23 — 86 endpoints verificados contra el código fuente*

@@ -20,7 +20,7 @@ router.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Bienvenido a API Ectyre v1",
-    endpoints: ["/auth", "/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/catalogos", "/compatibilidad", "/admin"]
+    endpoints: ["/auth", "/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/catalogos", "/compatibilidad", "/admin", "/admin/promociones"]
   });
 });
 
@@ -36,5 +36,6 @@ router.use("/admin", imagenRouter);   // 🖼️ Imágenes Cloudinary
 router.use("/vehiculos", vehiculoRouter);
 router.use("/catalogos", catalogoRouter);          // 📋 Catálogos de llantas
 router.use("/compatibilidad", compatibilidadRouter); // 🔗 Compatibilidad llanta-vehículo
+router.use("/admin/promociones", require("./promocion.router")); // 🖼️ Imágenes de promoción
 
 module.exports = router;

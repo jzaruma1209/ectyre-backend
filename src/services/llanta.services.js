@@ -9,6 +9,7 @@ const {
   SentidoRotacion,
   Producto,
   ImagenProducto,
+  ImagenPromocion,
   Compatibilidad,
   ModeloVehiculo,
   MarcaVehiculo,
@@ -31,6 +32,12 @@ const defaultInclude = [
         required: false,
         attributes: ["idImagen", "urlImagen", "orden"],
       },
+      {
+        model: ImagenPromocion,
+        as: "imagenPromocion",
+        required: false,
+        attributes: ["idImagenPromocion", "urlImagen", "nombre"],
+      },
     ],
   },
   {
@@ -50,6 +57,12 @@ const fullInclude = [
         model: ImagenProducto,
         as: "imagenes",
         order: [["orden", "ASC"]],
+      },
+      {
+        model: ImagenPromocion,
+        as: "imagenPromocion",
+        required: false,
+        attributes: ["idImagenPromocion", "urlImagen", "nombre"],
       },
     ],
   },
@@ -128,7 +141,7 @@ class LlantaService {
         },
         { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
       ],
-      order: [["$producto.precio$", "ASC"]],
+      order: [["idLlanta", "ASC"]],
     });
   }
 
@@ -335,8 +348,30 @@ class LlantaService {
   async createLlanta(data) {
     const transaction = await sequelize.transaction();
     try {
-      // 1. Crear producto base
-      const producto = await Producto.create({
+      // 1. Crear la entidad técnica de la llanta (sin referencia al producto todavía)
+      const llanta = await Llanta.create({
+        idMarca: data.idMarca,
+        idModeloLlanta: data.idModeloLlanta,
+        idIndiceCarga: data.idIndiceCarga,
+        idIndiceVelocidad: data.idIndiceVelocidad,
+        idTemperatura: data.idTemperatura,
+        idTipoLlanta: data.idTipoLlanta,
+        idSentidoRotacion: data.idSentidoRotacion,
+        codigoFabricante: data.codigoFabricante,
+        ancho: data.ancho,
+        perfil: data.perfil,
+        rin: data.rin,
+        procedencia: data.procedencia,
+        anioFabricacion: data.anioFabricacion,
+        treadwear: data.treadwear,
+        presionMaxima: data.presionMaxima,
+        lonas: data.lonas,
+        decibeles: data.decibeles,
+        dot: data.dot,
+      }, { transaction });
+
+      // 2. Crear el producto (card pública) apuntando a la llanta creada
+      await Producto.create({
         tipoProducto: "LLANTA",
         nombre: data.nombre,
         precio: data.precio,
@@ -345,12 +380,7 @@ class LlantaService {
         descripcion: data.descripcion,
         activo: data.activo !== undefined ? data.activo : true,
         destacado: data.destacado || false,
-      }, { transaction });
-
-      // 2. Crear llanta asociada
-      const llanta = await Llanta.create({
-        ...data,
-        idProducto: producto.idProducto,
+        idLlanta: llanta.idLlanta,
       }, { transaction });
 
       await transaction.commit();

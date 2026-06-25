@@ -103,6 +103,7 @@ const rateLimitRegistro = rateLimit({
   keyGenerator: (req) => {
     return req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.ip;
   },
+  skip: (req) => process.env.NODE_ENV === "test",
 });
 
 module.exports = {

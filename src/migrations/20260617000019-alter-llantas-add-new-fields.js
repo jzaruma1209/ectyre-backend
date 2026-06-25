@@ -2,14 +2,7 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // Agregar id_producto a llantas (FK a productos)
-    await queryInterface.addColumn("llantas", "id_producto", {
-      type: Sequelize.INTEGER,
-      allowNull: true, // Inicialmente nullable para no romper datos existentes
-      references: { model: "productos", key: "id_producto" },
-      onUpdate: "CASCADE",
-      onDelete: "CASCADE",
-    });
+    // NOTA: id_producto fue removido de llantas — la FK ahora vive en productos.id_llanta
 
     // Agregar id_modelo_llanta
     await queryInterface.addColumn("llantas", "id_modelo_llanta", {
@@ -91,25 +84,12 @@ module.exports = {
       allowNull: true,
     });
 
-    // Índices nuevos en llantas
-    await queryInterface.addIndex("llantas", ["id_producto"]);
+    // Índice en id_modelo_llanta
     await queryInterface.addIndex("llantas", ["id_modelo_llanta"]);
-
-    // Restricción unique en id_producto
-    await queryInterface.addConstraint("llantas", {
-      fields: ["id_producto"],
-      type: "unique",
-      name: "llantas_id_producto_key",
-    });
-
-    // Restricción unique en codigo_fabricante (si no existe)
-    // (Ya existe en la tabla original, solo aseguramos consistencia)
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeConstraint("llantas", "llantas_id_producto_key");
     await queryInterface.removeIndex("llantas", ["id_modelo_llanta"]);
-    await queryInterface.removeIndex("llantas", ["id_producto"]);
     await queryInterface.removeColumn("llantas", "dot");
     await queryInterface.removeColumn("llantas", "decibeles");
     await queryInterface.removeColumn("llantas", "lonas");
@@ -121,6 +101,5 @@ module.exports = {
     await queryInterface.removeColumn("llantas", "id_indice_velocidad");
     await queryInterface.removeColumn("llantas", "id_indice_carga");
     await queryInterface.removeColumn("llantas", "id_modelo_llanta");
-    await queryInterface.removeColumn("llantas", "id_producto");
   },
 };

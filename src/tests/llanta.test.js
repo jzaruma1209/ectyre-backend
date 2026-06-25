@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("../app");
-const { Llanta, MarcaLlanta, ImagenLlanta } = require("../models");
+const { Llanta, MarcaLlanta, Producto, ImagenProducto } = require("../models");
 const testMigrate = require("./testMigrate");
 
 describe("Llanta API Tests", () => {
@@ -18,32 +18,39 @@ describe("Llanta API Tests", () => {
 
     testLlanta = await Llanta.create({
       idMarca: testMarca.idMarca,
-      modelo: "Pilot Sport 4S",
       ancho: 225,
       perfil: 45,
       rin: 17,
+    });
+
+    await Producto.create({
+      nombre: "Llanta Michelin Pilot Sport 4S",
       precio: 189.99,
       stock: 20,
       activo: true,
-      destacado: true,
+      idLlanta: testLlanta.idLlanta,
     });
 
     // Segunda llanta para probar filtros
-    await Llanta.create({
+    const testLlanta2 = await Llanta.create({
       idMarca: testMarca.idMarca,
-      modelo: "Energy Saver",
       ancho: 205,
       perfil: 55,
       rin: 16,
+    });
+
+    await Producto.create({
+      nombre: "Llanta Michelin Energy Saver",
       precio: 145.00,
       stock: 0,
       activo: true,
-      destacado: false,
+      idLlanta: testLlanta2.idLlanta,
     });
   });
 
   afterAll(async () => {
-    await ImagenLlanta.destroy({ where: {} });
+    await ImagenProducto.destroy({ where: {} });
+    await Producto.destroy({ where: {} });
     await Llanta.destroy({ where: {} });
     await MarcaLlanta.destroy({ where: {} });
   });
@@ -66,7 +73,7 @@ describe("Llanta API Tests", () => {
         .expect(200);
 
       expect(res.body.success).toBe(true);
-      res.body.data.forEach((l) => expect(l.destacado).toBe(true));
+      res.body.data.forEach((l) => expect(l.producto.destacado).toBe(true));
     });
 
     test("Debe filtrar por marca", async () => {
@@ -88,7 +95,7 @@ describe("Llanta API Tests", () => {
 
       expect(res.body.success).toBe(true);
       expect(res.body.data.idLlanta).toBe(testLlanta.idLlanta);
-      expect(res.body.data.modelo).toBe("Pilot Sport 4S");
+      expect(res.body.data.producto.nombre).toBe("Llanta Michelin Pilot Sport 4S");
       expect(res.body.data).toHaveProperty("marca");
     });
 

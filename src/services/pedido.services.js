@@ -4,29 +4,58 @@ const {
   Pago,
   Carrito,
   ItemCarrito,
+  Producto,
   Llanta,
   MarcaLlanta,
+  ImagenProducto,
   Direccion,
   MetodoPago,
 } = require("../models");
 const { sequelize } = require("../models");
 
+const detalleInclude = [
+  {
+    model: Producto,
+    as: "producto",
+    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo"],
+    include: [
+      {
+        model: Llanta,
+        as: "llanta",
+        attributes: ["idLlanta", "ancho", "perfil", "rin"],
+        include: [
+          {
+            model: MarcaLlanta,
+            as: "marca",
+            attributes: ["idMarca", "nombre", "logoUrl"],
+          },
+        ],
+      },
+      {
+        model: ImagenProducto,
+        as: "imagenes",
+        where: { tipoImagen: "PRINCIPAL" },
+        required: false,
+        attributes: ["urlImagen"],
+        limit: 1,
+      },
+    ],
+  },
+];
+
 class PedidoService {
-  // Generar número de pedido único: P-YYYY-XXXXX
   _generarNumeroPedido() {
     const anio = new Date().getFullYear();
     const random = Math.floor(10000 + Math.random() * 90000);
     return `P-${anio}-${random}`;
   }
 
-  // Checkout: crear pedido desde el carrito activo del cliente
   async checkout(idCliente, data) {
     const { idDireccionEntrega, idMetodoPago, requiereInstalacion, observaciones } = data;
 
     const t = await sequelize.transaction();
 
     try {
-      // 1. Verificar que la dirección pertenece al cliente
       const direccion = await Direccion.findOne({
         where: { idDireccion: idDireccionEntrega, idCliente },
         transaction: t,
@@ -35,7 +64,6 @@ class PedidoService {
         throw new Error("La dirección de entrega no es válida");
       }
 
-      // 2. Verificar método de pago
       const metodoPago = await MetodoPago.findByPk(idMetodoPago, {
         transaction: t,
       });
@@ -43,7 +71,6 @@ class PedidoService {
         throw new Error("El método de pago no es válido");
       }
 
-      // 3. Obtener carrito activo del cliente con sus items
       const carrito = await Carrito.findOne({
         where: { idCliente, estado: "ACTIVO" },
         include: [
@@ -52,9 +79,9 @@ class PedidoService {
             as: "items",
             include: [
               {
-                model: Llanta,
-                as: "llanta",
-                attributes: ["idLlanta", "modelo", "precio", "stock", "activo"],
+                model: Producto,
+                as: "producto",
+                attributes: ["idProducto", "precio", "stock", "activo"],
               },
             ],
           },
@@ -66,30 +93,27 @@ class PedidoService {
         throw new Error("El carrito está vacío");
       }
 
-      // 4. Validar stock de cada item
       for (const item of carrito.items) {
-        if (!item.llanta.activo) {
+        if (!item.producto.activo) {
           throw new Error(
-            `La llanta "${item.llanta.modelo}" ya no está disponible`
+            `El producto "${item.producto.nombre || item.idProducto}" ya no está disponible`
           );
         }
-        if (item.llanta.stock < item.cantidad) {
+        if (item.producto.stock < item.cantidad) {
           throw new Error(
-            `Stock insuficiente para "${item.llanta.modelo}". Disponible: ${item.llanta.stock}`
+            `Stock insuficiente para el producto #${item.idProducto}. Disponible: ${item.producto.stock}`
           );
         }
       }
 
-      // 5. Calcular totales
       const subtotal = carrito.items.reduce(
         (acc, item) => acc + parseFloat(item.precioUnitario) * item.cantidad,
         0
       );
-      const iva = parseFloat((subtotal * 0.15).toFixed(2)); // IVA 15% Ecuador
-      const costoEnvio = 0; // Se puede extender en Etapa 2
+      const iva = parseFloat((subtotal * 0.15).toFixed(2));
+      const costoEnvio = 0;
       const total = parseFloat((subtotal + iva + costoEnvio).toFixed(2));
 
-      // 6. Crear el pedido
       const pedido = await Pedido.create(
         {
           numeroPedido: this._generarNumeroPedido(),
@@ -106,12 +130,11 @@ class PedidoService {
         { transaction: t }
       );
 
-      // 7. Crear los detalles del pedido y descontar stock
       for (const item of carrito.items) {
         await DetallePedido.create(
           {
             idPedido: pedido.idPedido,
-            idLlanta: item.idLlanta,
+            idProducto: item.idProducto,
             cantidad: item.cantidad,
             precioUnitario: item.precioUnitario,
             subtotal: (parseFloat(item.precioUnitario) * item.cantidad).toFixed(2),
@@ -119,14 +142,12 @@ class PedidoService {
           { transaction: t }
         );
 
-        // Descontar stock de la llanta
-        await Llanta.update(
-          { stock: item.llanta.stock - item.cantidad },
-          { where: { idLlanta: item.idLlanta }, transaction: t }
+        await Producto.update(
+          { stock: item.producto.stock - item.cantidad },
+          { where: { idProducto: item.idProducto }, transaction: t }
         );
       }
 
-      // 8. Crear el registro de pago
       await Pago.create(
         {
           idPedido: pedido.idPedido,
@@ -137,12 +158,10 @@ class PedidoService {
         { transaction: t }
       );
 
-      // 9. Marcar el carrito como convertido
       await carrito.update({ estado: "CONVERTIDO" }, { transaction: t });
 
       await t.commit();
 
-      // 10. Retornar el pedido completo
       const pedidoCompleto = await this.getPedidoById(
         pedido.idPedido,
         idCliente
@@ -154,7 +173,6 @@ class PedidoService {
     }
   }
 
-  // Listar todos los pedidos de un cliente
   async getPedidos(idCliente) {
     try {
       const pedidos = await Pedido.findAll({
@@ -163,20 +181,7 @@ class PedidoService {
           {
             model: DetallePedido,
             as: "detalles",
-            include: [
-              {
-                model: Llanta,
-                as: "llanta",
-                attributes: ["idLlanta", "modelo", "ancho", "perfil", "rin"],
-                include: [
-                  {
-                    model: MarcaLlanta,
-                    as: "marca",
-                    attributes: ["idMarca", "nombre"],
-                  },
-                ],
-              },
-            ],
+            include: detalleInclude,
           },
         ],
         order: [["createdAt", "DESC"]],
@@ -187,7 +192,6 @@ class PedidoService {
     }
   }
 
-  // Obtener detalle de un pedido específico
   async getPedidoById(idPedido, idCliente) {
     try {
       const where = { idPedido };
@@ -199,27 +203,7 @@ class PedidoService {
           {
             model: DetallePedido,
             as: "detalles",
-            include: [
-              {
-                model: Llanta,
-                as: "llanta",
-                attributes: [
-                  "idLlanta",
-                  "modelo",
-                  "ancho",
-                  "perfil",
-                  "rin",
-                  "precio",
-                ],
-                include: [
-                  {
-                    model: MarcaLlanta,
-                    as: "marca",
-                    attributes: ["idMarca", "nombre", "logoUrl"],
-                  },
-                ],
-              },
-            ],
+            include: detalleInclude,
           },
           {
             model: Direccion,
@@ -256,7 +240,6 @@ class PedidoService {
     }
   }
 
-  // Obtener tracking (estado actual del envío)
   async getTracking(idPedido, idCliente) {
     try {
       const pedido = await Pedido.findOne({
@@ -282,7 +265,6 @@ class PedidoService {
         throw new Error("Pedido no encontrado");
       }
 
-      // Construir el historial de estados según el estado actual
       const estadosOrden = [
         "PENDIENTE",
         "CONFIRMADO",

@@ -2,19 +2,16 @@ const request = require("supertest");
 const app = require("../app");
 const {
   Cliente,
-  Llanta,
-  MarcaLlanta,
-  Producto,
   Carrito,
   Direccion,
   MetodoPago,
   Pedido,
   DetallePedido,
   Pago,
-  sequelize,
 } = require("../models");
 const testMigrate = require("./testMigrate");
 const jwt = require("jsonwebtoken");
+const { crearProductoDePrueba } = require("./helpers/fixturesProducto");
 
 describe("Pedido API Tests — Flujo de Checkout Completo", () => {
   let tokenCliente;
@@ -23,6 +20,7 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
   let testDireccion;
   let testMetodoPago;
   let pedidoCreado;
+  let limpiarProducto;
 
   beforeAll(async () => {
     await testMigrate();
@@ -44,20 +42,9 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
       { expiresIn: "1h" }
     );
 
-    const marca = await MarcaLlanta.create({ nombre: "Test Brand Pedido", activo: true });
-    const testLlanta = await Llanta.create({
-      idMarca: marca.idMarca,
-      ancho: 205,
-      perfil: 55,
-      rin: 16,
-    });
-    testProducto = await Producto.create({
-      nombre: "Test Tire",
-      precio: 100.00,
-      stock: 10,
-      activo: true,
-      idLlanta: testLlanta.idLlanta,
-    });
+    const fixture = await crearProductoDePrueba({ nombre: "Test Tire", precio: 100, stock: 10 });
+    testProducto = fixture.producto;
+    limpiarProducto = fixture.limpiar;
 
     testMetodoPago = await MetodoPago.create({
       nombre: "Efectivo Test",
@@ -72,9 +59,7 @@ describe("Pedido API Tests — Flujo de Checkout Completo", () => {
     await Pedido.destroy({ where: {} });
     await Carrito.destroy({ where: {} });
     await Direccion.destroy({ where: {} });
-    await sequelize.query("DELETE FROM llantas");
-    await MarcaLlanta.destroy({ where: {} });
-    await Producto.destroy({ where: {} });
+    await limpiarProducto();
     await MetodoPago.destroy({ where: {} });
     await Cliente.destroy({ where: {} });
   });

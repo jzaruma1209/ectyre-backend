@@ -5,10 +5,10 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Compatibilidad extends Model {
     static associate(models) {
-      // Una compatibilidad pertenece a una llanta
-      this.belongsTo(models.Llanta, {
-        foreignKey: "idLlanta",
-        as: "llanta",
+      // Una compatibilidad pertenece a un producto
+      this.belongsTo(models.Producto, {
+        foreignKey: "idProducto",
+        as: "producto",
       });
 
       // Una compatibilidad pertenece a un modelo de vehículo
@@ -27,13 +27,13 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
         field: "id_compatibilidad",
       },
-      idLlanta: {
+      idProducto: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: "id_llanta",
+        field: "id_producto",
         references: {
-          model: "llantas",
-          key: "id_llanta",
+          model: "productos",
+          key: "id_producto",
         },
         onDelete: "CASCADE",
       },
@@ -46,6 +46,7 @@ module.exports = (sequelize, DataTypes) => {
           key: "id_modelo",
         },
         onDelete: "CASCADE",
+        comment: "Modelo de VEHÍCULO (tabla modelos_vehiculos)",
       },
       anioDesde: {
         type: DataTypes.INTEGER,
@@ -74,15 +75,11 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ["id_llanta", "id_modelo", "anio_desde"],
+          fields: ["id_producto", "id_modelo", "anio_desde"],
           name: "idx_unique_compatibilidad",
         },
-        {
-          fields: ["id_llanta"],
-        },
-        {
-          fields: ["id_modelo"],
-        },
+        { fields: ["id_producto"] },
+        { fields: ["id_modelo"] },
       ],
     }
   );

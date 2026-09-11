@@ -2,7 +2,7 @@ const compatibilidadService = require("../services/compatibilidad.services");
 const catchError = require("../utils/catchError");
 
 // GET /compatibilidad/vehiculo?idModelo=1&anio=2020
-const getLlantasByVehiculo = catchError(async (req, res) => {
+const getProductosByVehiculo = catchError(async (req, res) => {
   const { idModelo, anio } = req.query;
 
   if (!idModelo || !anio) {
@@ -12,22 +12,22 @@ const getLlantasByVehiculo = catchError(async (req, res) => {
     });
   }
 
-  const data = await compatibilidadService.getLlantasByVehiculo({
+  const data = await compatibilidadService.getProductosByVehiculo({
     idModelo: parseInt(idModelo),
     anio: parseInt(anio),
   });
 
   res.status(200).json({
     success: true,
-    message: "Llantas compatibles obtenidas correctamente",
+    message: "Productos compatibles obtenidos correctamente",
     data,
   });
 });
 
-// GET /compatibilidad/llanta/:id
-const getVehiculosByLlanta = catchError(async (req, res) => {
+// GET /compatibilidad/producto/:id
+const getVehiculosByProducto = catchError(async (req, res) => {
   const { id } = req.params;
-  const data = await compatibilidadService.getVehiculosByLlanta(id);
+  const data = await compatibilidadService.getVehiculosByProducto(id);
 
   res.status(200).json({
     success: true,
@@ -84,8 +84,8 @@ const deleteCompatibilidad = catchError(async (req, res) => {
 });
 
 module.exports = {
-  getLlantasByVehiculo,
-  getVehiculosByLlanta,
+  getProductosByVehiculo,
+  getVehiculosByProducto,
   getCompatibilidadById,
   createCompatibilidad,
   updateCompatibilidad,

@@ -2,7 +2,6 @@
 const { verifyJWT, isAdmin } = require("./auth.middleware");
 const {
   validate,
-  validateLlantaData,
   validateClienteData,
   validateLoginData,
   validatePedidoData,
@@ -24,7 +23,6 @@ module.exports = {
 
   // Validaciones
   validate,
-  validateLlantaData,
   validateClienteData,
   validateLoginData,
   validatePedidoData,

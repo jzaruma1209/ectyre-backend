@@ -36,6 +36,13 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         field: "url_imagen",
       },
+      publicId: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        field: "public_id",
+        comment: "ID de Cloudinary para poder eliminar el archivo",
+      },
+      // Solo una imagen PRINCIPAL por producto (índice único parcial en la BD)
       tipoImagen: {
         type: DataTypes.ENUM("PRINCIPAL", "LATERAL", "DETALLE"),
         allowNull: false,
@@ -47,6 +54,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
         comment: "Orden de visualización",
+      },
+      esPrincipal: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue("tipoImagen") === "PRINCIPAL";
+        },
       },
     },
     {

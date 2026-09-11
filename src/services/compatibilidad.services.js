@@ -1,56 +1,29 @@
-const {
-  Compatibilidad,
-  Llanta,
-  ModeloVehiculo,
-  MarcaVehiculo,
-  MarcaLlanta,
-  Producto,
-  ImagenProducto,
-} = require("../models");
+const { Compatibilidad, Producto, ModeloVehiculo, MarcaVehiculo } = require("../models");
 const { NotFoundError, ConflictError } = require("../utils/customErrors");
 const { Op } = require("sequelize");
-
-// Include estándar para llantas con producto anidado
-const llantaConProducto = [
-  {
-    model: Producto,
-    as: "producto",
-    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo"],
-    include: [
-      {
-        model: ImagenProducto,
-        as: "imagenes",
-        where: { tipoImagen: "PRINCIPAL" },
-        required: false,
-        attributes: ["urlImagen"],
-        limit: 1,
-      },
-    ],
-  },
-  { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre"] },
-];
+const { includeProductoCompleto, serializarProducto } = require("../utils/productoHelpers");
 
 class CompatibilidadService {
-  // ─── Llantas compatibles con un vehículo ───────────────────────────────────
-  async getLlantasByVehiculo({ idModelo, anio }) {
+  // ─── Productos compatibles con un vehículo ─────────────────────────────────
+  async getProductosByVehiculo({ idModelo, anio }) {
     const modelo = await ModeloVehiculo.findByPk(idModelo, {
       include: [{ model: MarcaVehiculo, as: "marca", attributes: ["nombre"] }],
     });
     if (!modelo) throw new NotFoundError("Modelo de vehículo no encontrado");
 
-    const where = {
-      idModelo,
-      anioDesde: { [Op.lte]: anio },
-      [Op.or]: [{ anioHasta: { [Op.gte]: anio } }, { anioHasta: null }],
-    };
-
     const compatibilidades = await Compatibilidad.findAll({
-      where,
+      where: {
+        idModelo,
+        anioDesde: { [Op.lte]: anio },
+        [Op.or]: [{ anioHasta: { [Op.gte]: anio } }, { anioHasta: null }],
+      },
       include: [
         {
-          model: Llanta,
-          as: "llanta",
-          include: llantaConProducto,
+          model: Producto,
+          as: "producto",
+          required: true,
+          where: { activo: true },
+          include: includeProductoCompleto(),
         },
       ],
       order: [["esOriginal", "DESC"]],
@@ -65,23 +38,23 @@ class CompatibilidadService {
       },
       anio,
       totalCompatibles: compatibilidades.length,
-      llantas: compatibilidades.map((c) => ({
+      productos: compatibilidades.map((c) => ({
         idCompatibilidad: c.idCompatibilidad,
         esOriginal: c.esOriginal,
         anioDesde: c.anioDesde,
         anioHasta: c.anioHasta,
-        llanta: c.llanta,
+        producto: serializarProducto(c.producto),
       })),
     };
   }
 
-  // ─── Vehículos compatibles con una llanta ──────────────────────────────────
-  async getVehiculosByLlanta(idLlanta) {
-    const llanta = await Llanta.findByPk(idLlanta);
-    if (!llanta) throw new NotFoundError("Llanta no encontrada");
+  // ─── Vehículos compatibles con un producto ─────────────────────────────────
+  async getVehiculosByProducto(idProducto) {
+    const producto = await Producto.findByPk(idProducto);
+    if (!producto) throw new NotFoundError("Producto no encontrado");
 
     const compatibilidades = await Compatibilidad.findAll({
-      where: { idLlanta },
+      where: { idProducto },
       include: [
         {
           model: ModeloVehiculo,
@@ -93,7 +66,7 @@ class CompatibilidadService {
     });
 
     return {
-      idLlanta,
+      idProducto: Number(idProducto),
       totalVehiculos: compatibilidades.length,
       vehiculos: compatibilidades.map((c) => ({
         idCompatibilidad: c.idCompatibilidad,
@@ -109,11 +82,7 @@ class CompatibilidadService {
   async getCompatibilidadById(id) {
     const comp = await Compatibilidad.findByPk(id, {
       include: [
-        {
-          model: Llanta,
-          as: "llanta",
-          include: [{ model: MarcaLlanta, as: "marca", attributes: ["nombre"] }],
-        },
+        { model: Producto, as: "producto", attributes: ["idProducto", "nombre"] },
         {
           model: ModeloVehiculo,
           as: "modelo",
@@ -127,21 +96,21 @@ class CompatibilidadService {
 
   // ─── Crear compatibilidad (Admin) ───────────────────────────────────────────
   async createCompatibilidad(data) {
-    const { idLlanta, idModelo, anioDesde, anioHasta, esOriginal } = data;
+    const { idProducto, idModelo, anioDesde, anioHasta, esOriginal } = data;
 
-    const [llanta, modelo] = await Promise.all([
-      Llanta.findByPk(idLlanta),
+    const [producto, modelo] = await Promise.all([
+      Producto.findByPk(idProducto),
       ModeloVehiculo.findByPk(idModelo),
     ]);
-    if (!llanta) throw new NotFoundError("Llanta no encontrada");
+    if (!producto) throw new NotFoundError("Producto no encontrado");
     if (!modelo) throw new NotFoundError("Modelo de vehículo no encontrado");
 
     try {
-      const comp = await Compatibilidad.create({ idLlanta, idModelo, anioDesde, anioHasta, esOriginal });
+      const comp = await Compatibilidad.create({ idProducto, idModelo, anioDesde, anioHasta, esOriginal });
       return this.getCompatibilidadById(comp.idCompatibilidad);
     } catch (error) {
       if (error.name === "SequelizeUniqueConstraintError") {
-        throw new ConflictError("Ya existe esta compatibilidad llanta-vehículo-año");
+        throw new ConflictError("Ya existe esta compatibilidad producto-vehículo-año");
       }
       throw error;
     }
@@ -151,7 +120,8 @@ class CompatibilidadService {
   async updateCompatibilidad(id, data) {
     const comp = await Compatibilidad.findByPk(id);
     if (!comp) throw new NotFoundError("Compatibilidad no encontrada");
-    await comp.update(data);
+    const { idProducto, idModelo, anioDesde, anioHasta, esOriginal } = data;
+    await comp.update({ idProducto, idModelo, anioDesde, anioHasta, esOriginal });
     return this.getCompatibilidadById(id);
   }
 

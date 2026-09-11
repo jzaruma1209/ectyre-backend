@@ -3,47 +3,69 @@ const {
   DetallePedido,
   Cliente,
   Producto,
-  Llanta,
-  MarcaLlanta,
-  ImagenProducto,
+  Marca,
   Carrito,
-  ItemCarrito,
   Direccion,
-  MetodoPago,
-  Pago,
   sequelize,
 } = require("../models");
 const { Op } = require("sequelize");
+const { includeProductoResumen, includeMedidas } = require("../utils/productoHelpers");
+const { formatearMedida } = require("../utils/formatoMedida");
 
 const detalleInclude = [
   {
     model: Producto,
     as: "producto",
-    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo"],
-    include: [
-      {
-        model: Llanta,
-        as: "llanta",
-        attributes: ["idLlanta", "ancho", "perfil", "rin"],
-        include: [
-          {
-            model: MarcaLlanta,
-            as: "marca",
-            attributes: ["idMarca", "nombre"],
-          },
-        ],
-      },
-      {
-        model: ImagenProducto,
-        as: "imagenes",
-        where: { tipoImagen: "PRINCIPAL" },
-        required: false,
-        attributes: ["urlImagen"],
-        limit: 1,
-      },
-    ],
+    attributes: ["idProducto", "nombre", "precio", "precioAnterior", "stock", "activo"],
+    include: includeProductoResumen(),
   },
 ];
+
+// SQL compartido por los reportes de productos más vendidos
+const SQL_PRODUCTOS_VENDIDOS = (filtroPedidos, limite) => `
+  SELECT
+    dp.id_producto                    AS "idProducto",
+    SUM(dp.cantidad)                  AS "unidadesVendidas",
+    SUM(dp.subtotal)                  AS "totalGenerado",
+    COUNT(dp.id_pedido)               AS "vecesComprado",
+    prod.nombre                       AS "productoNombre",
+    prod.precio                       AS "productoPrecio",
+    prod.stock                        AS "productoStock",
+    m.id_marca                        AS "marcaIdMarca",
+    m.nombre                          AS "marcaNombre",
+    a.valor                           AS "ancho",
+    al.valor                          AS "alto",
+    r.valor                           AS "aro",
+    MIN(img.url_imagen)               AS "imagenPrincipal"
+  FROM detalle_pedido dp
+  INNER JOIN pedidos p ON p.id_pedido = dp.id_pedido AND p.estado <> 'CANCELADO' ${filtroPedidos}
+  INNER JOIN productos prod ON prod.id_producto = dp.id_producto
+  INNER JOIN marcas m ON m.id_marca = prod.id_marca
+  LEFT JOIN producto_medidas pm ON pm.id_producto = prod.id_producto
+  LEFT JOIN anchos a ON a.id_ancho = pm.id_ancho
+  LEFT JOIN altos al ON al.id_alto = pm.id_alto
+  LEFT JOIN aros r ON r.id_aro = pm.id_aro
+  LEFT JOIN imagenes_productos img
+         ON img.id_producto = prod.id_producto AND img.tipo_imagen = 'PRINCIPAL'
+  GROUP BY dp.id_producto, prod.nombre, prod.precio, prod.stock, m.id_marca, m.nombre, a.valor, al.valor, r.valor
+  ORDER BY SUM(dp.cantidad) DESC
+  LIMIT ${limite}`;
+
+const mapearProductoVendido = (row) => ({
+  idProducto: row.idProducto,
+  unidadesVendidas: Number(row.unidadesVendidas) || 0,
+  totalGenerado: Number(row.totalGenerado) || 0,
+  vecesComprado: Number(row.vecesComprado) || 0,
+  producto: {
+    idProducto: row.idProducto,
+    nombre: row.productoNombre,
+    precio: row.productoPrecio,
+    stock: row.productoStock,
+    marca: { idMarca: row.marcaIdMarca, nombre: row.marcaNombre },
+    medida: formatearMedida(row.ancho, row.alto, row.aro),
+    imagenes: row.imagenPrincipal ? [{ urlImagen: row.imagenPrincipal }] : [],
+  },
+});
 
 class AdminService {
   async getDashboard() {
@@ -111,60 +133,10 @@ class AdminService {
       }), []);
 
     const productosMasVendidos = await safe("productosMasVendidos", async () => {
-      const productosMasVendidosRaw = await sequelize.query(
-        `SELECT
-          dp.id_producto                    AS "idProducto",
-          SUM(dp.cantidad)                  AS "unidadesVendidas",
-          SUM(dp.subtotal)                  AS "totalGenerado",
-          p.id_producto                     AS "productoIdProducto",
-          p.nombre                          AS "productoNombre",
-          p.precio                          AS "productoPrecio",
-          p.stock                           AS "productoStock",
-          l.id_llanta                       AS "llantaIdLlanta",
-          l.ancho                           AS "llantaAncho",
-          l.perfil                          AS "llantaPerfil",
-          l.rin                             AS "llantaRin",
-          m.id_marca                        AS "marcaIdMarca",
-          m.nombre                          AS "marcaNombre",
-          MIN(img.url_imagen)               AS "imagenPrincipal"
-        FROM detalle_pedido dp
-        INNER JOIN pedidos p   ON p.id_pedido  = dp.id_pedido  AND p.estado <> 'CANCELADO'
-        INNER JOIN productos  prod ON prod.id_producto = dp.id_producto
-        INNER JOIN llantas  l  ON l.id_llanta = prod.id_llanta
-        INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
-        LEFT  JOIN imagenes_productos img
-               ON img.id_producto = prod.id_producto AND img.tipo_imagen = 'PRINCIPAL'
-        GROUP BY dp.id_producto, prod.id_producto, prod.nombre, prod.precio, prod.stock,
-                 l.id_llanta, l.ancho, l.perfil, l.rin, m.id_marca, m.nombre
-        ORDER BY SUM(dp.cantidad) DESC
-        LIMIT 5`,
-        { type: sequelize.QueryTypes.SELECT }
-      );
-
-      return productosMasVendidosRaw.map((row) => ({
-        idProducto: row.idProducto,
-        unidadesVendidas: Number(row.unidadesVendidas),
-        totalGenerado: Number(row.totalGenerado),
-        producto: {
-          idProducto: row.productoIdProducto,
-          nombre: row.productoNombre,
-          precio: row.productoPrecio,
-          stock: row.productoStock,
-          llanta: {
-            idLlanta: row.llantaIdLlanta,
-            ancho: row.llantaAncho,
-            perfil: row.llantaPerfil,
-            rin: row.llantaRin,
-            marca: {
-              idMarca: row.marcaIdMarca,
-              nombre: row.marcaNombre,
-            },
-          },
-          imagenes: row.imagenPrincipal
-            ? [{ urlImagen: row.imagenPrincipal }]
-            : [],
-        },
-      }));
+      const filas = await sequelize.query(SQL_PRODUCTOS_VENDIDOS("", 5), {
+        type: sequelize.QueryTypes.SELECT,
+      });
+      return filas.map(mapearProductoVendido);
     }, []);
 
     const [clientesNuevosMes, totalClientes] = await Promise.all([
@@ -178,16 +150,7 @@ class AdminService {
       Producto.findAll({
         where: { stock: { [Op.lt]: 5 }, activo: true },
         attributes: ["idProducto", "nombre", "precio", "stock"],
-        include: [
-          {
-            model: Llanta,
-            as: "llanta",
-            attributes: ["idLlanta", "ancho", "perfil", "rin"],
-            include: [
-              { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre"] },
-            ],
-          },
-        ],
+        include: [{ model: Marca, as: "marca", attributes: ["idMarca", "nombre"] }, includeMedidas()],
         order: [["stock", "ASC"]],
         limit: 10,
       }), []);
@@ -384,7 +347,7 @@ class AdminService {
           {
             model: Direccion,
             as: "direccionEntrega",
-            attributes: ["calle", "numeracion", "ciudad", "provincia", "referencias"],
+            attributes: ["idDireccion", "provincia", "ciudad", "direccionCompleta", "referencia"],
           },
           {
             model: DetallePedido,
@@ -428,16 +391,7 @@ class AdminService {
                 model: Producto,
                 as: "producto",
                 attributes: ["idProducto", "nombre", "precio"],
-                include: [
-                  {
-                    model: Llanta,
-                    as: "llanta",
-                    attributes: ["ancho", "perfil", "rin"],
-                    include: [
-                      { model: MarcaLlanta, as: "marca", attributes: ["nombre"] },
-                    ],
-                  },
-                ],
+                include: [{ model: Marca, as: "marca", attributes: ["nombre"] }, includeMedidas()],
               },
             ],
           },
@@ -463,18 +417,13 @@ class AdminService {
   // ─────────────────────────────────────────────
   async updateStockLlanta(idProducto, stock) {
     try {
-      if (stock === undefined || stock === null || isNaN(stock) || stock < 0) {
-        throw new Error("El stock debe ser un número mayor o igual a 0");
+      // Regla 10: stock 0 es válido (el producto se muestra como "Agotado")
+      if (stock === undefined || stock === null || stock === "" || !Number.isInteger(Number(stock)) || Number(stock) < 0) {
+        throw new Error("El stock debe ser un número entero mayor o igual a 0");
       }
 
       const producto = await Producto.findByPk(idProducto, {
-        include: [
-          {
-            model: Llanta,
-            as: "llanta",
-            include: [{ model: MarcaLlanta, as: "marca", attributes: ["nombre"] }],
-          },
-        ],
+        include: [{ model: Marca, as: "marca", attributes: ["nombre"] }],
       });
       if (!producto) {
         throw new Error("Producto no encontrado");
@@ -567,33 +516,7 @@ class AdminService {
       const parsedLimit = parseInt(limit) || 10;
 
       const productosRaw = await sequelize.query(
-        `SELECT
-          dp.id_producto                    AS "idProducto",
-          SUM(dp.cantidad)                  AS "unidadesVendidas",
-          SUM(dp.subtotal)                  AS "totalGenerado",
-          COUNT(dp.id_pedido)               AS "vecesComprado",
-          prod.id_producto                  AS "productoIdProducto",
-          prod.nombre                       AS "productoNombre",
-          prod.precio                       AS "productoPrecio",
-          prod.stock                        AS "productoStock",
-          l.ancho                           AS "llantaAncho",
-          l.perfil                          AS "llantaPerfil",
-          l.rin                             AS "llantaRin",
-          m.nombre                          AS "marcaNombre",
-          MIN(img.url_imagen)               AS "imagenPrincipal"
-        FROM detalle_pedido dp
-        INNER JOIN pedidos p  ON p.id_pedido = dp.id_pedido
-                              AND p.estado <> 'CANCELADO'
-                              AND p.created_at BETWEEN :desde AND :hasta
-        INNER JOIN productos prod ON prod.id_producto = dp.id_producto
-        INNER JOIN llantas l  ON l.id_llanta = prod.id_llanta
-        INNER JOIN marcas_llantas m ON m.id_marca = l.id_marca
-        LEFT  JOIN imagenes_productos img
-               ON img.id_producto = prod.id_producto AND img.tipo_imagen = 'PRINCIPAL'
-        GROUP BY dp.id_producto, prod.id_producto, prod.nombre, prod.precio, prod.stock,
-                 l.id_llanta, l.ancho, l.perfil, l.rin, m.id_marca, m.nombre
-        ORDER BY SUM(dp.cantidad) DESC
-        LIMIT :limit`,
+        SQL_PRODUCTOS_VENDIDOS("AND p.created_at BETWEEN :desde AND :hasta", ":limit"),
         {
           replacements: { desde: fechaDesde, hasta: fechaHasta, limit: parsedLimit },
           type: sequelize.QueryTypes.SELECT,
@@ -608,27 +531,7 @@ class AdminService {
         };
       }
 
-      const productos = productosRaw.map((row) => ({
-        idProducto: row.idProducto,
-        unidadesVendidas: Number(row.unidadesVendidas) || 0,
-        totalGenerado: Number(row.totalGenerado) || 0,
-        vecesComprado: Number(row.vecesComprado) || 0,
-        producto: {
-          idProducto: row.productoIdProducto,
-          nombre: row.productoNombre,
-          precio: row.productoPrecio,
-          stock: row.productoStock,
-          llanta: {
-            ancho: row.llantaAncho,
-            perfil: row.llantaPerfil,
-            rin: row.llantaRin,
-            marca: { nombre: row.marcaNombre },
-          },
-          imagenes: row.imagenPrincipal
-            ? [{ urlImagen: row.imagenPrincipal }]
-            : [],
-        },
-      }));
+      const productos = productosRaw.map(mapearProductoVendido);
 
       return {
         periodo: { desde: fechaDesde, hasta: fechaHasta },

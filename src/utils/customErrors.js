@@ -17,8 +17,10 @@ class NotFoundError extends AppError {
 }
 
 class ValidationError extends AppError {
-  constructor(message = "Datos inválidos") {
+  // `errors` (opcional): lista de mensajes para mostrar todos los problemas a la vez
+  constructor(message = "Datos inválidos", errors = null) {
     super(message, 400);
+    this.errors = errors;
   }
 }
 

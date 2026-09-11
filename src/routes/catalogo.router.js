@@ -1,67 +1,65 @@
 const express = require("express");
-const {
-  getAllCatalogos,
-  getAllModelosLlanta,
-  getModeloLlantaById,
-  createModeloLlanta,
-  updateModeloLlanta,
-  deleteModeloLlanta,
-  getAllIndicesCarga,
-  createIndiceCarga,
-  deleteIndiceCarga,
-  getAllIndicesVelocidad,
-  createIndiceVelocidad,
-  deleteIndiceVelocidad,
-  getAllTemperaturas,
-  createTemperatura,
-  deleteTemperatura,
-  getAllTiposLlanta,
-  createTipoLlanta,
-  updateTipoLlanta,
-  deleteTipoLlanta,
-  getAllSentidosRotacion,
-  createSentidoRotacion,
-  deleteSentidoRotacion,
-} = require("../controllers/catalogo.controllers");
-const { verifyJWT } = require("../middlewares/auth.middleware");
+const { MetodoPago } = require("../models");
+const { verifyJWT, isAdmin } = require("../middlewares/auth.middleware");
 const { validateId } = require("../middlewares/validation.middleware");
+const { uploadImagenesMarca, uploadIconoEspecificacion } = require("../middlewares/upload.middleware");
+const catchError = require("../utils/catchError");
+const n = require("../controllers/niveles.controllers");
 
-const routerCatalogo = express.Router();
+const router = express.Router();
+const admin = [verifyJWT, isAdmin];
 
-// ─── Endpoint consolidado ────────────────────────────────────────────────────
-routerCatalogo.get("/", getAllCatalogos); // 🌍 Todos los catálogos en uno (para selects del admin)
+// ═══════════════════════════════════════════════════════════════
+// NIVELES DE INVENTARIO — todo lo que se selecciona al crear un producto
+// Lectura pública (?todos=true incluye inactivos). Escritura: JWT + Admin
+// ═══════════════════════════════════════════════════════════════
 
-// ─── Modelos de Llanta ───────────────────────────────────────────────────────
-routerCatalogo.get("/modelos-llanta", getAllModelosLlanta);                          // 🌍 Público
-routerCatalogo.get("/modelos-llanta/:id", validateId, getModeloLlantaById);         // 🌍 Público
-routerCatalogo.post("/modelos-llanta", verifyJWT, createModeloLlanta);              // 🔒 Admin
-routerCatalogo.put("/modelos-llanta/:id", verifyJWT, validateId, updateModeloLlanta); // 🔒 Admin
-routerCatalogo.delete("/modelos-llanta/:id", verifyJWT, validateId, deleteModeloLlanta); // 🔒 Admin
+router.get("/niveles", n.obtenerNiveles);
 
-// ─── Índices de Carga ────────────────────────────────────────────────────────
-routerCatalogo.get("/indices-carga", getAllIndicesCarga);                            // 🌍 Público
-routerCatalogo.post("/indices-carga", verifyJWT, createIndiceCarga);                // 🔒 Admin
-routerCatalogo.delete("/indices-carga/:id", verifyJWT, validateId, deleteIndiceCarga); // 🔒 Admin
+// ─── Tipos de producto (con bandera requiereModeloMedidas) ─────
+router.get("/tipos-producto", n.listarTiposProducto);
+router.post("/tipos-producto", ...admin, n.crearTipoProducto);
+router.put("/tipos-producto/:id", ...admin, validateId, n.actualizarTipoProducto);
+router.delete("/tipos-producto/:id", ...admin, validateId, n.eliminarTipoProducto);
 
-// ─── Índices de Velocidad ────────────────────────────────────────────────────
-routerCatalogo.get("/indices-velocidad", getAllIndicesVelocidad);                    // 🌍 Público
-routerCatalogo.post("/indices-velocidad", verifyJWT, createIndiceVelocidad);        // 🔒 Admin
-routerCatalogo.delete("/indices-velocidad/:id", verifyJWT, validateId, deleteIndiceVelocidad); // 🔒 Admin
+// ─── Marcas (multipart: logo + banner) ─────────────────────────
+router.get("/marcas", n.listarMarcas);                     // ?idTipoProducto=
+router.post("/marcas", ...admin, uploadImagenesMarca, n.crearMarca);
+router.put("/marcas/:id", ...admin, validateId, uploadImagenesMarca, n.actualizarMarca);
+router.delete("/marcas/:id", ...admin, validateId, n.eliminarMarca);
 
-// ─── Temperaturas ────────────────────────────────────────────────────────────
-routerCatalogo.get("/temperaturas", getAllTemperaturas);                             // 🌍 Público
-routerCatalogo.post("/temperaturas", verifyJWT, createTemperatura);                 // 🔒 Admin
-routerCatalogo.delete("/temperaturas/:id", verifyJWT, validateId, deleteTemperatura); // 🔒 Admin
+// ─── Modelos (ligados a una marca) ─────────────────────────────
+router.get("/modelos", n.listarModelos);                   // ?idMarca=&idTipoProducto=
+router.post("/modelos", ...admin, n.crearModelo);
+router.put("/modelos/:id", ...admin, validateId, n.actualizarModelo);
+router.delete("/modelos/:id", ...admin, validateId, n.eliminarModelo);
 
-// ─── Tipos de Llanta ─────────────────────────────────────────────────────────
-routerCatalogo.get("/tipos-llanta", getAllTiposLlanta);                             // 🌍 Público
-routerCatalogo.post("/tipos-llanta", verifyJWT, createTipoLlanta);                 // 🔒 Admin
-routerCatalogo.put("/tipos-llanta/:id", verifyJWT, validateId, updateTipoLlanta);  // 🔒 Admin
-routerCatalogo.delete("/tipos-llanta/:id", verifyJWT, validateId, deleteTipoLlanta); // 🔒 Admin
+// ─── Tipos de uso del modelo (AT, MT, HP…) ─────────────────────
+router.get("/tipos-uso", n.listarTiposUso);
+router.post("/tipos-uso", ...admin, n.crearTipoUso);
+router.put("/tipos-uso/:id", ...admin, validateId, n.actualizarTipoUso);
+router.delete("/tipos-uso/:id", ...admin, validateId, n.eliminarTipoUso);
 
-// ─── Sentidos de Rotación ─────────────────────────────────────────────────────
-routerCatalogo.get("/sentidos-rotacion", getAllSentidosRotacion);                   // 🌍 Público
-routerCatalogo.post("/sentidos-rotacion", verifyJWT, createSentidoRotacion);       // 🔒 Admin
-routerCatalogo.delete("/sentidos-rotacion/:id", verifyJWT, validateId, deleteSentidoRotacion); // 🔒 Admin
+// ─── Medidas: :tipo = anchos | altos | aros ────────────────────
+router.get("/medidas/:tipo", n.listarMedidas);
+router.post("/medidas/:tipo", ...admin, n.crearMedida);
+router.post("/medidas/:tipo/lote", ...admin, n.crearMedidasLote);
+router.put("/medidas/:tipo/:id", ...admin, validateId, n.actualizarMedida);
+router.delete("/medidas/:tipo/:id", ...admin, validateId, n.eliminarMedida);
 
-module.exports = routerCatalogo;
+// ─── Especificaciones técnicas (multipart: icono) ──────────────
+router.get("/especificaciones", n.listarEspecificaciones); // ?idTipoProducto=
+router.post("/especificaciones", ...admin, uploadIconoEspecificacion, n.crearEspecificacion);
+router.put("/especificaciones/:id", ...admin, validateId, uploadIconoEspecificacion, n.actualizarEspecificacion);
+router.delete("/especificaciones/:id", ...admin, validateId, n.eliminarEspecificacion);
+
+// ─── Métodos de pago (lectura) — necesario para el checkout ────
+router.get(
+  "/metodos-pago",
+  catchError(async (req, res) => {
+    const metodos = await MetodoPago.findAll({ where: { activo: true }, order: [["idMetodo", "ASC"]] });
+    res.status(200).json({ success: true, data: metodos });
+  })
+);
+
+module.exports = router;

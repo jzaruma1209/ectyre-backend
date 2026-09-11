@@ -77,6 +77,7 @@ const errorHandler = (error, req, res, _next) => {
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
+      ...(Array.isArray(error.errors) && error.errors.length > 0 ? { errors: error.errors } : {}),
     });
   }
 

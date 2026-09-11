@@ -15,51 +15,8 @@ const validate = (req, res, next) => {
   next();
 };
 
-/**
- * Validaciones para Llantas
- */
-const validateLlantaData = [
-  body("idMarca")
-    .notEmpty()
-    .withMessage("La marca es requerida")
-    .isInt()
-    .withMessage("ID de marca inválido"),
-  body("nombre")
-    .notEmpty()
-    .withMessage("El nombre (del producto) es requerido")
-    .isLength({ min: 2, max: 150 })
-    .withMessage("Nombre debe tener entre 2 y 150 caracteres"),
-  body("idModeloLlanta")
-    .optional()
-    .isInt()
-    .withMessage("ID de modelo de llanta inválido"),
-  body("ancho")
-    .notEmpty()
-    .withMessage("El ancho es requerido")
-    .isInt({ min: 100, max: 400 })
-    .withMessage("Ancho debe estar entre 100 y 400"),
-  body("perfil")
-    .notEmpty()
-    .withMessage("El perfil es requerido")
-    .isInt({ min: 25, max: 100 })
-    .withMessage("Perfil debe estar entre 25 y 100"),
-  body("rin")
-    .notEmpty()
-    .withMessage("El rin es requerido")
-    .isInt({ min: 10, max: 30 })
-    .withMessage("Rin debe estar entre 10 y 30"),
-  body("precio")
-    .notEmpty()
-    .withMessage("El precio es requerido")
-    .isDecimal()
-    .withMessage("Precio debe ser un número decimal"),
-  body("stock")
-    .notEmpty()
-    .withMessage("El stock es requerido")
-    .isInt({ min: 0 })
-    .withMessage("Stock debe ser mayor o igual a 0"),
-  validate,
-];
+// Las validaciones de productos (reglas de negocio) viven en services/producto.services.js
+// porque dependen de la BD (tipo, marca, modelo, especificaciones por tipo…).
 
 /**
  * Validaciones para Cliente (Registro)
@@ -127,6 +84,11 @@ const validatePedidoData = [
     .withMessage("La dirección de entrega es requerida")
     .isInt()
     .withMessage("ID de dirección inválido"),
+  body("idMetodoPago")
+    .notEmpty()
+    .withMessage("El método de pago es requerido")
+    .isInt()
+    .withMessage("ID de método de pago inválido"),
   body("requiereInstalacion")
     .optional()
     .isBoolean()
@@ -209,7 +171,7 @@ const validateCatalogo = [
  * Validaciones para Compatibilidad
  */
 const validateCompatibilidad = [
-  body("idLlanta").notEmpty().isInt().withMessage("ID de llanta inválido"),
+  body("idProducto").notEmpty().isInt().withMessage("ID de producto inválido"),
   body("idModelo").notEmpty().isInt().withMessage("ID de modelo de vehículo inválido"),
   body("anioDesde").notEmpty().isInt().withMessage("Año desde inválido"),
   body("anioHasta").optional({ nullable: true }).isInt().withMessage("Año hasta inválido"),
@@ -219,7 +181,6 @@ const validateCompatibilidad = [
 
 module.exports = {
   validate,
-  validateLlantaData,
   validateClienteData,
   validateLoginData,
   validatePedidoData,

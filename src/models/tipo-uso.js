@@ -3,37 +3,42 @@
 const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-  class Temperatura extends Model {
+  class TipoUso extends Model {
     static associate(models) {
-      this.hasMany(models.Llanta, {
-        foreignKey: "idTemperatura",
-        as: "llantas",
+      // Tipo de uso de un modelo (ej: AT = All Terrain, MT = Mud Terrain)
+      this.hasMany(models.Modelo, {
+        foreignKey: "idTipoUso",
+        as: "modelos",
       });
     }
   }
 
-  Temperatura.init(
+  TipoUso.init(
     {
-      idTemperatura: {
+      idTipoUso: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        field: "id_temperatura",
+        field: "id_tipo_uso",
       },
       codigo: {
         type: DataTypes.STRING(5),
         allowNull: false,
         unique: true,
       },
+      descripcion: {
+        type: DataTypes.STRING(150),
+        allowNull: false,
+      },
     },
     {
       sequelize,
-      modelName: "Temperatura",
-      tableName: "temperaturas",
+      modelName: "TipoUso",
+      tableName: "tipos_uso",
       timestamps: true,
       underscored: true,
     }
   );
 
-  return Temperatura;
+  return TipoUso;
 };

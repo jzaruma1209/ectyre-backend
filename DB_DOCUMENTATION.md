@@ -3,6 +3,9 @@
 ## Motor
 PostgreSQL — ORM: Sequelize
 
+> Última actualización: 2026-09-11 — migración `20260911000001-arquitectura-productos`
+> (arquitectura de productos: Tipo de Producto → Marca → Modelo → Medidas).
+
 ---
 
 ## Regla general
@@ -60,149 +63,178 @@ Direcciones de entrega por cliente. Un cliente puede tener varias.
 
 ## Módulo 2 — Catálogo de productos
 
-### Flujo de creación en cascada (obligatorio respetar este orden):
+### Concepto: dos flujos según el tipo de producto
 
 ```
-marcas_llantas
-    └── modelos_llantas
-indices_carga
-indices_velocidad
-temperaturas
-tipos_llanta
-sentidos_rotacion
-    └── llantas  (usa todo lo anterior)
-            └── productos  (card pública, usa id_llanta)
-                    └── imagenes_productos
-                    └── imagenes_promocion (opcional)
+Flujo A (tipos_producto.requiere_modelo_medidas = true, ej: LLANTAS)
+  Tipo de Producto → Marca → Modelo → Medidas (Ancho / Alto / Aro)
+
+Flujo B (requiere_modelo_medidas = false, ej: BATERÍAS, ACCESORIOS, TUBOS, AROS)
+  Tipo de Producto → Marca
+```
+
+### Orden de carga ("Niveles de Inventario" — todo debe existir antes de crear un producto)
+
+```
+tipos_producto  (+ bandera requiere_modelo_medidas)
+    └── marcas  (pertenece a un tipo; logo + banner obligatorios si el tipo requiere modelo/medidas)
+            └── modelos  (pertenece a una marca; solo si el tipo lo requiere)
+                    └── tipos_uso  (dato informativo del modelo: AT, MT, HP…)
+anchos / altos / aros            (catálogos planos, independientes de marca y modelo)
+especificaciones_tecnicas        (con N tipos de producto donde aplican)
+
+productos
+    ├── producto_medidas           (0..1 — solo si el tipo requiere medidas)
+    ├── producto_especificaciones  (0..N — valor por especificación)
+    └── imagenes_productos         (máx 5, exactamente 1 PRINCIPAL si tiene fotos)
 ```
 
 ---
 
-### `marcas_llantas`
-Marcas fabricantes de llantas (Michelin, Bridgestone, etc.)
+### `tipos_producto`
+Catálogo de tipos (antes `familias`). Define qué flujo usa el formulario de producto.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id_tipo_producto | serial PK | |
+| codigo | varchar(10) | UNIQUE (autogenerado 001, 002…) |
+| nombre | varchar(100) | LLANTAS, AROS, ACEITES, ACCESORIOS, BATERÍAS, TUBOS |
+| descripcion | text | nullable |
+| requiere_modelo_medidas | boolean | NOT NULL default false. true = flujo A |
+| activo | boolean | default true |
+
+> No se puede cambiar `requiere_modelo_medidas` si el tipo ya tiene productos (validado en servicio).
+
+### `marcas`
+Marcas por tipo de producto (antes `marcas_llantas`; la tabla genérica `marcas` anterior se fusionó aquí).
 
 | Columna | Tipo | Notas |
 |---|---|---|
 | id_marca | serial PK | |
-| nombre | varchar(100) | UNIQUE |
+| id_tipo_producto | int FK → tipos_producto | NOT NULL, RESTRICT |
+| nombre | varchar(100) | UNIQUE por tipo (`marcas_tipo_nombre_key`) |
 | descripcion | text | nullable |
 | pais_origen | varchar(100) | nullable |
-| logo_url | varchar(500) | nullable |
+| logo_url | varchar(500) | obligatorio si el tipo requiere modelo/medidas (servicio) |
+| banner_url | varchar(500) | obligatorio si el tipo requiere modelo/medidas (servicio) |
 | activo | boolean | default true |
 
-### `modelos_llantas`
-Líneas/modelos de una marca (ej: Michelin → Pilot Sport 4)
+### `modelos`
+Modelos de una marca (antes `modelos_llantas`). Un modelo pertenece a UNA sola marca.
 
 | Columna | Tipo | Notas |
 |---|---|---|
-| id_modelo_llanta | serial PK | |
-| id_marca | int FK → marcas_llantas | RESTRICT delete |
-| nombre | varchar(100) | UNIQUE por marca |
+| id_modelo | serial PK | |
+| id_marca | int FK → marcas | NOT NULL, RESTRICT |
+| id_tipo_uso | int FK → tipos_uso | nullable, SET NULL |
+| nombre | varchar(100) | UNIQUE por marca (`modelos_marca_nombre_key`) |
+| activo | boolean | default true |
 
-### `indices_carga`
-Catálogo de índices de carga (ej: 91, 94, 100...)
+> Solo se permiten modelos para marcas cuyo tipo tiene `requiere_modelo_medidas = true` (servicio).
+> ⚠️ No confundir con `modelos_vehiculos` (módulo 5).
 
-| Columna | Tipo | Notas |
-|---|---|---|
-| id_indice_carga | serial PK | |
-| codigo | varchar(10) | UNIQUE |
-
-### `indices_velocidad`
-Catálogo de índices de velocidad (ej: H, V, W, Y...)
+### `tipos_uso`
+Tipo de uso del modelo (antes `tipos_llanta`). Informativo; se muestra como insignia en el card.
 
 | Columna | Tipo | Notas |
 |---|---|---|
-| id_indice_velocidad | serial PK | |
-| codigo | varchar(5) | UNIQUE |
-
-### `temperaturas`
-Catálogo de ratings de temperatura (A, B, C)
-
-| Columna | Tipo | Notas |
-|---|---|---|
-| id_temperatura | serial PK | |
-| codigo | varchar(5) | UNIQUE |
-
-### `tipos_llanta`
-Tipo de uso de la llanta (verano, invierno, todo terreno, etc.)
-
-| Columna | Tipo | Notas |
-|---|---|---|
-| id_tipo_llanta | serial PK | |
-| codigo | varchar(5) | UNIQUE |
+| id_tipo_uso | serial PK | |
+| codigo | varchar(5) | UNIQUE (AT, MT, HT, HP, RT, XT, ST) |
 | descripcion | varchar(150) | |
 
-### `sentidos_rotacion`
-Direccionalidad de la llanta (direccional, simétrica, asimétrica)
+### `anchos` / `altos` / `aros`
+Tres catálogos planos e independientes. Se precargan valores comunes (el aro admite decimales: 22.5).
 
 | Columna | Tipo | Notas |
 |---|---|---|
-| id_sentido_rotacion | serial PK | |
-| descripcion | varchar(50) | UNIQUE |
+| id_ancho / id_alto / id_aro | serial PK | |
+| valor | numeric(6,2) | UNIQUE, CHECK > 0 (el modelo lo devuelve como número) |
+| activo | boolean | default true (inactivo = no se ofrece al crear productos) |
 
----
-
-### `llantas`
-Entidad técnica de la llanta. NO tiene precio, NO tiene imágenes. Es el dato puro del producto físico.
+### `especificaciones_tecnicas`
+Catálogo de especificaciones (Tracción, Temperatura, Voltaje, Amperaje…). El valor se asigna por producto.
 
 | Columna | Tipo | Notas |
 |---|---|---|
-| id_llanta | serial PK | |
-| id_marca | int FK → marcas_llantas | RESTRICT |
-| id_modelo_llanta | int FK → modelos_llantas | RESTRICT, nullable |
-| codigo_fabricante | varchar(50) | UNIQUE, nullable |
-| ancho | int | ej: 205 |
-| perfil | int | ej: 55 |
-| rin | int | ej: 16 |
-| procedencia | varchar(100) | nullable |
-| anio_fabricacion | int | nullable |
-| id_indice_carga | int FK → indices_carga | nullable |
-| id_indice_velocidad | int FK → indices_velocidad | nullable |
-| id_temperatura | int FK → temperaturas | nullable |
-| id_tipo_llanta | int FK → tipos_llanta | nullable |
-| id_sentido_rotacion | int FK → sentidos_rotacion | nullable |
-| treadwear | int | nullable |
-| presion_maxima | numeric(5,2) | nullable |
-| lonas | int | nullable |
-| decibeles | numeric(4,1) | nullable |
-| dot | varchar(20) | nullable |
+| id_especificacion | serial PK | |
+| nombre | varchar(100) | UNIQUE |
+| icono_url | varchar(500) | nullable |
+| activo | boolean | default true |
 
-> ⚠️ `llantas` NO tiene `id_producto`. La relación va en la dirección opuesta: `productos.id_llanta`
+### `especificaciones_tipos_producto`
+Relación N:N — a qué tipos de producto aplica cada especificación (mínimo 1, validado en servicio).
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id_especificacion | int FK → especificaciones_tecnicas | PK compuesta, CASCADE |
+| id_tipo_producto | int FK → tipos_producto | PK compuesta, CASCADE |
 
 ---
 
 ### `productos`
-Card pública del producto en la tienda. Es la tabla principal del catálogo. Contiene precio, stock, imágenes y apunta a la entidad técnica correspondiente.
+Card pública del producto. Referencia directa a tipo, marca y (si aplica) modelo.
 
 | Columna | Tipo | Notas |
 |---|---|---|
 | id_producto | serial PK | |
-| tipo_producto | enum | LLANTA (futuro: ARO, ACEITE, etc.) |
-| nombre | varchar(150) | nullable |
-| precio | numeric(10,2) | |
-| precio_oferta | numeric(10,2) | nullable |
-| stock | int | default 0 |
+| id_tipo_producto | int FK → tipos_producto | NOT NULL, RESTRICT |
+| id_marca | int FK → marcas | NOT NULL, RESTRICT. Debe pertenecer al mismo tipo |
+| id_modelo | int FK → modelos | nullable, RESTRICT. Obligatorio en flujo A y de la misma marca |
+| nombre | varchar(150) | NOT NULL |
 | descripcion | text | nullable |
-| activo | boolean | default true |
+| precio | numeric(10,2) | NOT NULL — precio de venta (lo que paga el cliente). CHECK > 0 |
+| precio_anterior | numeric(10,2) | nullable — precio tachado. CHECK > precio |
+| stock | int | default 0, CHECK ≥ 0. Stock 0 = "Agotado" (no bloquea la creación) |
+| es_nuevo | boolean | default false |
+| en_oferta | boolean | default false. CHECK: si es true exige precio_anterior |
+| envio_gratis | boolean | default false |
+| aplica_devoluciones | boolean | default false |
+| aplica_garantia | boolean | default false |
+| activo | boolean | default true (borrado lógico) |
 | destacado | boolean | default false |
 | id_imagen_promocion | int FK → imagenes_promocion | nullable, SET NULL on delete |
-| id_llanta | int FK → llantas | nullable, RESTRICT on delete |
 
-> ✅ Una misma llanta puede tener N productos (combos, precios distintos, etc.)
-> ✅ En el futuro: `tipo_producto = 'ARO'` apuntará a una tabla `aros` de la misma forma
+> ⚠️ Antes existían `precio_oferta` (precio rebajado), `tipo_producto` (enum), `id_llanta`, `familia_id`,
+> `marca_id`, `procedencia_id` y `linea_id`. Ya no existen.
+> Las CHECK se crearon `NOT VALID` (aplican a todo INSERT/UPDATE nuevo).
 
----
+### `producto_medidas`
+Combinación Ancho + Alto + Aro de un producto. Solo existe si el tipo requiere medidas.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id_producto_medida | serial PK | |
+| id_producto | int FK → productos | UNIQUE, CASCADE |
+| id_ancho | int FK → anchos | RESTRICT |
+| id_alto | int FK → altos | RESTRICT |
+| id_aro | int FK → aros | RESTRICT |
+
+### `producto_especificaciones`
+Valor de cada especificación en un producto (ej: Tracción → "A").
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id_producto_especificacion | serial PK | |
+| id_producto | int FK → productos | CASCADE |
+| id_especificacion | int FK → especificaciones_tecnicas | RESTRICT |
+| valor | varchar(100) | NOT NULL |
+
+> UNIQUE (id_producto, id_especificacion). La especificación debe aplicar al tipo del producto (servicio).
 
 ### `imagenes_productos`
-Imágenes de detalle del producto. Mínimo 1, máximo 5 (validar desde la app).
+Fotos del producto. **Máximo 5** (validado en backend) y **una sola PRINCIPAL**.
 
 | Columna | Tipo | Notas |
 |---|---|---|
 | id_imagen | serial PK | |
 | id_producto | int FK → productos | CASCADE delete |
 | url_imagen | varchar(500) | |
-| tipo_imagen | enum | default 'DETALLE' |
-| orden | int | default 0, para ordenar el carrusel |
+| public_id | varchar(255) | nullable — id de Cloudinary para borrar el archivo |
+| tipo_imagen | enum | PRINCIPAL / LATERAL / DETALLE. PRINCIPAL = foto principal |
+| orden | int | default 0, orden del carrusel |
+
+> Índice único parcial `imagenes_productos_una_principal` (id_producto) WHERE tipo_imagen = 'PRINCIPAL'.
+> Si no se marca ninguna, el backend asigna la primera como principal.
 
 ### `imagenes_promocion`
 Imágenes tipo banner/promo que se muestran en la card del producto. Se pueden reutilizar y cambiar en cualquier momento.
@@ -213,6 +245,11 @@ Imágenes tipo banner/promo que se muestran en la card del producto. Se pueden r
 | url_imagen | varchar(500) | |
 | nombre | varchar(150) | nullable |
 | activo | boolean | default true |
+
+### Tablas eliminadas en la migración 2026-09-11
+`llantas`, `imagenes_llantas`, `indices_carga`, `indices_velocidad`, `temperaturas`, `sentidos_rotacion`,
+`lineas`, `procedencias` y la tabla genérica `marcas` (fusionada en la nueva `marcas`).
+Los datos técnicos de llantas ahora son especificaciones técnicas con valor por producto.
 
 ---
 
@@ -226,7 +263,7 @@ Soporta carritos de sesiones anónimas (sin login) y logueadas.
 | id_carrito | serial PK | |
 | id_cliente | int FK → clientes | nullable (anónimo) |
 | sesion_id | varchar(255) | para usuarios no logueados |
-| estado | enum | ACTIVO / ABANDONADO |
+| estado | enum | ACTIVO / ABANDONADO / CONVERTIDO |
 | fecha_abandonado | timestamptz | nullable |
 
 ### `items_carrito`
@@ -237,7 +274,7 @@ Soporta carritos de sesiones anónimas (sin login) y logueadas.
 | id_carrito | int FK → carritos | CASCADE delete |
 | id_producto | int FK → productos | RESTRICT delete |
 | cantidad | int | default 1 |
-| precio_unitario | numeric(10,2) | precio al momento de agregar |
+| precio_unitario | numeric(10,2) | `productos.precio` al momento de agregar |
 
 ---
 
@@ -298,7 +335,7 @@ Soporta carritos de sesiones anónimas (sin login) y logueadas.
 
 ## Módulo 5 — Compatibilidad vehicular
 
-Permite responder: ¿qué llantas sirven para mi vehículo?
+Permite responder: ¿qué productos sirven para mi vehículo?
 
 ### `marcas_vehiculos`
 
@@ -319,20 +356,25 @@ Permite responder: ¿qué llantas sirven para mi vehículo?
 | tipo_vehiculo | enum | SEDAN / SUV / ... |
 
 ### `compatibilidad`
-Relaciona llantas con modelos de vehículos por rango de años.
+Relaciona productos con modelos de vehículos por rango de años (antes apuntaba a `llantas`).
 
 | Columna | Tipo | Notas |
 |---|---|---|
 | id_compatibilidad | serial PK | |
-| id_llanta | int FK → llantas | CASCADE delete |
-| id_modelo | int FK → modelos_vehiculos | CASCADE delete |
+| id_producto | int FK → productos | NOT NULL, CASCADE delete |
+| id_modelo | int FK → modelos_vehiculos | CASCADE delete (modelo de VEHÍCULO) |
 | anio_desde | int | |
 | anio_hasta | int | nullable (hasta hoy) |
 | es_original | boolean | default false |
 
+> UNIQUE `idx_unique_compatibilidad` (id_producto, id_modelo, anio_desde)
+
 ---
 
-## Módulo 6 — Sequelize
+## Módulo 6 — Contenido / Sequelize
+
+### `media_items`
+Biblioteca de medios (Cloudinary) usada por el panel admin. Sin relaciones obligatorias.
 
 ### `SequelizeMeta`
 Tabla interna de Sequelize para control de migraciones. No tocar manualmente.
@@ -349,38 +391,54 @@ pedidos           →  detalle_pedido  →  productos
 pedidos           →  pagos           →  metodos_pago
 pedidos           →  direcciones
 carritos          →  items_carrito   →  productos
+tipos_producto    →  marcas          →  modelos  →  tipos_uso
+tipos_producto    ↔  especificaciones_tecnicas   (especificaciones_tipos_producto)
+productos         →  tipos_producto / marcas / modelos (nullable)
+productos         →  producto_medidas → anchos / altos / aros
+productos         →  producto_especificaciones → especificaciones_tecnicas
 productos         →  imagenes_productos
 productos         →  imagenes_promocion
-productos         →  llantas         →  marcas_llantas
-                                     →  modelos_llantas
-                                     →  indices_carga
-                                     →  indices_velocidad
-                                     →  temperaturas
-                                     →  tipos_llanta
-                                     →  sentidos_rotacion
-llantas           →  compatibilidad  →  modelos_vehiculos  →  marcas_vehiculos
+productos         →  compatibilidad  →  modelos_vehiculos  →  marcas_vehiculos
 ```
+
+---
+
+## Reglas de negocio (validadas en `services/producto.services.js`)
+
+1. Si el tipo requiere modelo y medidas: modelo, ancho, alto y aro son obligatorios. Si no, no se guardan.
+2. El modelo debe pertenecer a la marca seleccionada.
+3. Máximo 5 fotos por producto (multer + servicio).
+4. Siempre exactamente una foto principal si hay fotos (la primera por defecto).
+5. `precio_anterior` > `precio`.
+6. `en_oferta = true` exige `precio_anterior`.
+7. Solo especificaciones asociadas al tipo del producto.
+8. La marca debe existir previamente (y pertenecer al tipo elegido).
+9. `precio` > 0.
+10. Stock 0 permitido; la API devuelve `disponible = false` y el card muestra "Agotado".
 
 ---
 
 ## JOINs más comunes
 
-### Obtener producto con datos de llanta
+### Obtener producto con marca, modelo y medida
 ```sql
-SELECT p.*, l.ancho, l.perfil, l.rin, ml.nombre as modelo, ma.nombre as marca
+SELECT p.*, m.nombre AS marca, mo.nombre AS modelo,
+       a.valor AS ancho, al.valor AS alto, r.valor AS aro
 FROM productos p
-LEFT JOIN llantas l ON l.id_llanta = p.id_llanta
-LEFT JOIN modelos_llantas ml ON ml.id_modelo_llanta = l.id_modelo_llanta
-LEFT JOIN marcas_llantas ma ON ma.id_marca = l.id_marca
+JOIN marcas m ON m.id_marca = p.id_marca
+LEFT JOIN modelos mo ON mo.id_modelo = p.id_modelo
+LEFT JOIN producto_medidas pm ON pm.id_producto = p.id_producto
+LEFT JOIN anchos a ON a.id_ancho = pm.id_ancho
+LEFT JOIN altos al ON al.id_alto = pm.id_alto
+LEFT JOIN aros r ON r.id_aro = pm.id_aro
 WHERE p.id_producto = :id;
 ```
 
-### Llantas compatibles con un vehículo
+### Productos compatibles con un vehículo
 ```sql
-SELECT l.*, p.*
+SELECT p.*
 FROM compatibilidad c
-JOIN llantas l ON l.id_llanta = c.id_llanta
-JOIN productos p ON p.id_llanta = l.id_llanta
+JOIN productos p ON p.id_producto = c.id_producto
 WHERE c.id_modelo = :id_modelo
 AND (:anio BETWEEN c.anio_desde AND COALESCE(c.anio_hasta, 9999))
 AND p.activo = true;

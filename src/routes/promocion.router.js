@@ -3,7 +3,7 @@
 const express = require("express");
 const { getAll, getById, create, update, remove, toggleActivo } = require("../controllers/promocion.controllers");
 const { verifyJWT } = require("../middlewares/auth.middleware");
-const { uploadImagenLlanta: uploadPromocion } = require("../middlewares/upload.middleware");
+const { uploadImagenPromocion: uploadPromocion } = require("../middlewares/upload.middleware");
 
 const router = express.Router();
 

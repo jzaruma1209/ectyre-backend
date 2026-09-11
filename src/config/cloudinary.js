@@ -72,12 +72,90 @@ const uploadLlanta = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // máx 5MB
 });
 
-// ─── Middleware de Multer para marcas (logo) ──────────────────────────
+// ─── Middleware de Multer para marcas (logo y banner) ────────────────
 const uploadMarca = multer({
   storage: storageMarcas,
   fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 }, // máx 2MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // máx 5MB (los banners son imágenes anchas)
 });
+
+// ─── Storage para fotos de productos (máx 5 por producto) ─────────────
+const storageProductos = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "ectyre/productos",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    resource_type: "image",
+    transformation: [{ quality: "auto", fetch_format: "auto" }],
+  },
+});
+
+const uploadProducto = multer({
+  storage: storageProductos,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // máx 5MB por imagen
+});
+
+// ─── Storage para íconos de especificaciones técnicas ─────────────────
+const storageEspecificaciones = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "ectyre/especificaciones",
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "svg"],
+    resource_type: "image",
+  },
+});
+
+const uploadEspecificacion = multer({
+  storage: storageEspecificaciones,
+  fileFilter,
+  limits: { fileSize: 1 * 1024 * 1024 }, // máx 1MB (ícono pequeño)
+});
+
+// ─── Storage para Media general (banners, promociones, secciones) ──────
+const storageMedia = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "ectyre/media",
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "svg"],
+    resource_type: "image",
+  },
+});
+
+// ─── Filtro de tipos de archivo permitidos para Media ─────────────────
+const mediaFileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
+  ];
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Tipo de archivo no permitido. Solo se aceptan: jpg, jpeg, png, webp, gif, svg"
+      ),
+      false
+    );
+  }
+};
+
+// ─── Middleware de Multer para Media ──────────────────────────────────
+const uploadMediaSingle = multer({
+  storage: storageMedia,
+  fileFilter: mediaFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // máx 10MB
+}).single("file");
+
+const uploadMediaMultiple = multer({
+  storage: storageMedia,
+  fileFilter: mediaFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }, // máx 10MB
+}).array("files", 10);
 
 // ─── Función helper para eliminar imagen de Cloudinary ───────────────
 const deleteImage = async (publicId) => {
@@ -92,9 +170,35 @@ const deleteImage = async (publicId) => {
   }
 };
 
+// ─── Limpieza: borra de Cloudinary archivos ya subidos por multer ─────
+// Se usa cuando la validación de negocio rechaza la petición después de la subida.
+// Acepta req.file, req.files (array) o req.files (objeto de arrays). Nunca lanza.
+const eliminarArchivosSubidos = async (archivos) => {
+  if (!archivos) return;
+  const lista = Array.isArray(archivos)
+    ? archivos
+    : archivos.filename
+      ? [archivos]
+      : Object.values(archivos).flat();
+  await Promise.all(
+    lista
+      .filter((archivo) => archivo?.filename)
+      .map((archivo) =>
+        deleteImage(archivo.filename).catch((error) =>
+          console.warn(`[Cloudinary] No se pudo eliminar ${archivo.filename}: ${error.message}`)
+        )
+      )
+  );
+};
+
 module.exports = {
   cloudinary,
   uploadLlanta,
   uploadMarca,
+  uploadProducto,
+  uploadEspecificacion,
+  uploadMediaSingle,
+  uploadMediaMultiple,
   deleteImage,
+  eliminarArchivosSubidos,
 };

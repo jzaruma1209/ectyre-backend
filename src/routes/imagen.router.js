@@ -8,37 +8,29 @@ const {
   deleteImagen,
   setPrincipalImagen,
 } = require("../controllers/imagen.controllers");
-const { verifyJWT } = require("../middlewares/auth.middleware");
+const { verifyJWT, isAdmin } = require("../middlewares/auth.middleware");
 const {
-  uploadImagenLlanta: multerSingle,
-  uploadImagenesLlanta: multerMultiple,
+  uploadImagenProducto: multerSingle,
+  uploadImagenesProducto: multerMultiple,
 } = require("../middlewares/upload.middleware");
 
 const router = express.Router();
 
-// GET  /api/v1/admin/productos/:id/imagenes         🌍 Público
-// POST /api/v1/admin/productos/:id/imagenes         👑 Admin — sube 1 imagen
+// Montado en /api/v1/admin — todas requieren JWT + rol admin
+// GET  /admin/productos/:id/imagenes            👑 Lista ordenada
+// POST /admin/productos/:id/imagenes            👑 Sube 1 imagen (field "imagen")
 router
   .route("/productos/:id/imagenes")
-  .get(getImagenesProducto)
-  .post(verifyJWT, multerSingle, uploadImagenProducto);
+  .get(verifyJWT, isAdmin, getImagenesProducto)
+  .post(verifyJWT, isAdmin, multerSingle, uploadImagenProducto);
 
-// POST /api/v1/admin/productos/:id/imagenes/multiple  👑 Admin — sube hasta 5 imágenes
-router.post(
-  "/productos/:id/imagenes/multiple",
-  verifyJWT,
-  multerMultiple,
-  uploadImagenesProducto
-);
+// POST /admin/productos/:id/imagenes/multiple   👑 Sube varias (máx 5 en total por producto)
+router.post("/productos/:id/imagenes/multiple", verifyJWT, isAdmin, multerMultiple, uploadImagenesProducto);
 
-// PATCH /api/v1/admin/productos/:id/imagenes/:idImagen/principal  👑 Admin
-router.patch(
-  "/productos/:id/imagenes/:idImagen/principal",
-  verifyJWT,
-  setPrincipalImagen
-);
+// PATCH /admin/productos/:id/imagenes/:idImagen/principal  👑
+router.patch("/productos/:id/imagenes/:idImagen/principal", verifyJWT, isAdmin, setPrincipalImagen);
 
-// DELETE /api/v1/admin/imagenes/:idImagen  👑 Admin
-router.delete("/imagenes/:idImagen", verifyJWT, deleteImagen);
+// DELETE /admin/imagenes/:idImagen  👑 (si era la principal, la siguiente pasa a serlo)
+router.delete("/imagenes/:idImagen", verifyJWT, isAdmin, deleteImagen);
 
 module.exports = router;

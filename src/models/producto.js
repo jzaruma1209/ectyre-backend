@@ -5,16 +5,48 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Producto extends Model {
     static associate(models) {
-      // Un producto pertenece a una llanta (FK id_llanta vive aquí en productos)
-      this.belongsTo(models.Llanta, {
-        foreignKey: "idLlanta",
-        as: "llanta",
+      // ─── Jerarquía: Tipo de producto → Marca → Modelo ──────────────────
+      this.belongsTo(models.TipoProducto, {
+        foreignKey: "idTipoProducto",
+        as: "tipoProducto",
       });
 
-      // Un producto tiene muchas imágenes
+      this.belongsTo(models.Marca, {
+        foreignKey: "idMarca",
+        as: "marca",
+      });
+
+      // Solo cuando el tipo de producto requiere modelo y medidas (ej: Llantas)
+      this.belongsTo(models.Modelo, {
+        foreignKey: "idModelo",
+        as: "modelo",
+      });
+
+      // ─── Relaciones propias del producto ───────────────────────────────
+      this.hasOne(models.ProductoMedida, {
+        foreignKey: "idProducto",
+        as: "medidas",
+      });
+
+      this.hasMany(models.ProductoEspecificacion, {
+        foreignKey: "idProducto",
+        as: "especificaciones",
+      });
+
+      // Máximo 5 imágenes, una principal
       this.hasMany(models.ImagenProducto, {
         foreignKey: "idProducto",
         as: "imagenes",
+      });
+
+      this.belongsTo(models.ImagenPromocion, {
+        foreignKey: "idImagenPromocion",
+        as: "imagenPromocion",
+      });
+
+      this.hasMany(models.Compatibilidad, {
+        foreignKey: "idProducto",
+        as: "compatibilidades",
       });
 
       // Un producto puede estar en muchos items de carrito
@@ -28,12 +60,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "idProducto",
         as: "detallesPedidos",
       });
-
-      // Un producto puede pertenecer a una imagen de promoción
-      this.belongsTo(models.ImagenPromocion, {
-        foreignKey: "idImagenPromocion",
-        as: "imagenPromocion",
-      });
     }
   }
 
@@ -45,33 +71,80 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
         field: "id_producto",
       },
-      tipoProducto: {
-        type: DataTypes.ENUM("LLANTA"),
+      idTipoProducto: {
+        type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: "LLANTA",
-        field: "tipo_producto",
+        field: "id_tipo_producto",
+        references: { model: "tipos_producto", key: "id_tipo_producto" },
+        onDelete: "RESTRICT",
+      },
+      idMarca: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: "id_marca",
+        references: { model: "marcas", key: "id_marca" },
+        onDelete: "RESTRICT",
+      },
+      idModelo: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: "id_modelo",
+        references: { model: "modelos", key: "id_modelo" },
+        onDelete: "RESTRICT",
       },
       nombre: {
         type: DataTypes.STRING(150),
+        allowNull: false,
+      },
+      descripcion: {
+        type: DataTypes.TEXT,
         allowNull: true,
       },
       precio: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
+        comment: "Precio de venta actual (USD). Siempre > 0",
       },
-      precioOferta: {
+      precioAnterior: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
-        field: "precio_oferta",
+        field: "precio_anterior",
+        comment: "Precio tachado del card. Si existe debe ser > precio",
       },
       stock: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-      descripcion: {
-        type: DataTypes.TEXT,
-        allowNull: true,
+      esNuevo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "es_nuevo",
+      },
+      enOferta: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "en_oferta",
+      },
+      envioGratis: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "envio_gratis",
+      },
+      aplicaDevoluciones: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "aplica_devoluciones",
+      },
+      aplicaGarantia: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "aplica_garantia",
       },
       activo: {
         type: DataTypes.BOOLEAN,
@@ -91,15 +164,12 @@ module.exports = (sequelize, DataTypes) => {
           key: "id_imagen_promocion",
         },
       },
-      idLlanta: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        field: "id_llanta",
-        references: {
-          model: "llantas",
-          key: "id_llanta",
+      // Stock en 0 no bloquea la creación, pero el card debe mostrar "Agotado"
+      disponible: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue("activo") !== false && Number(this.getDataValue("stock")) > 0;
         },
-        onDelete: "RESTRICT",
       },
     },
     {
@@ -111,8 +181,9 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         { fields: ["activo"] },
         { fields: ["destacado"] },
-        { fields: ["tipo_producto"] },
-        { fields: ["id_llanta"] },
+        { fields: ["id_tipo_producto"] },
+        { fields: ["id_marca"] },
+        { fields: ["id_modelo"] },
       ],
     }
   );

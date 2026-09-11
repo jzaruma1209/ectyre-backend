@@ -1,11 +1,13 @@
 const request = require("supertest");
 const app = require("../app");
-const { Carrito, Cliente, Llanta, ItemCarrito, Producto, MarcaLlanta } = require("../models");
+const { Carrito, Cliente, ItemCarrito } = require("../models");
 const testMigrate = require("./testMigrate");
+const { crearProductoDePrueba } = require("./helpers/fixturesProducto");
 
 describe("Carrito API Tests", () => {
   let testCliente;
   let testProducto;
+  let limpiarProducto;
 
   beforeAll(async () => {
     await testMigrate();
@@ -21,34 +23,15 @@ describe("Carrito API Tests", () => {
       activo: true,
     });
 
-    const testMarca = await MarcaLlanta.create({
-      nombre: "Michelin Test",
-      descripcion: "Marca de prueba",
-      activo: true,
-    });
-
-    const testLlanta = await Llanta.create({
-      idMarca: testMarca.idMarca,
-      ancho: 225,
-      perfil: 45,
-      rin: 17,
-    });
-
-    testProducto = await Producto.create({
-      nombre: "Michelin Pilot Sport 4",
-      precio: 150.00,
-      stock: 10,
-      activo: true,
-      idLlanta: testLlanta.idLlanta,
-    });
+    const fixture = await crearProductoDePrueba({ nombre: "Michelin Pilot Sport 4", precio: 150, stock: 10 });
+    testProducto = fixture.producto;
+    limpiarProducto = fixture.limpiar;
   });
 
   afterAll(async () => {
     await ItemCarrito.destroy({ where: {} });
     await Carrito.destroy({ where: {} });
-    await Producto.destroy({ where: {} });
-    await Llanta.destroy({ where: {} });
-    await MarcaLlanta.destroy({ where: {} });
+    await limpiarProducto();
     await Cliente.destroy({ where: {} });
   });
 

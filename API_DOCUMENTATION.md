@@ -2,8 +2,69 @@
 
 > **Base URL (Local):** `http://localhost:8080/api/v1`  
 > **Base URL (Producción):** `https://ectyre-backend.vercel.app/api/v1`  
-> **Versión:** 1.0.2  
+> **Versión:** 1.2.0  
 > **Autenticación:** Bearer Token (JWT)
+
+> ⚠️ **v1.2.0 (2026-09-11):** el sistema de productos cambió (ver sección *Productos y Niveles de Inventario*).
+> Las secciones antiguas de **Llantas** y **Catálogos de llantas** más abajo quedan como referencia histórica:
+> `/llantas` solo mantiene sus `GET` como alias deprecado de `/productos`.
+
+---
+
+## 📦 Productos y Niveles de Inventario (v1.2.0)
+
+### Niveles de Inventario — `/catalogos`
+Lectura pública (`?todos=true` incluye inactivos). Escritura 👑.
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/catalogos/niveles` | Todo en un request: tiposProducto, marcas, modelos, tiposUso, anchos, altos, aros, especificaciones |
+| `GET/POST` | `/catalogos/tipos-producto` | `{ nombre, descripcion?, requiereModeloMedidas, activo? }` (código autogenerado) |
+| `PUT/DELETE` | `/catalogos/tipos-producto/:id` | No permite cambiar el flujo si ya hay productos |
+| `GET/POST` | `/catalogos/marcas` | `?idTipoProducto=` · multipart: `idTipoProducto, nombre, paisOrigen?, logo (file) \| logoUrl, banner (file) \| bannerUrl` |
+| `PUT/DELETE` | `/catalogos/marcas/:id` | Logo y banner obligatorios si el tipo requiere modelo/medidas. `quitarLogo`, `quitarBanner` |
+| `GET/POST` | `/catalogos/modelos` | `?idMarca=&idTipoProducto=` · `{ idMarca, nombre, idTipoUso? }` |
+| `PUT/DELETE` | `/catalogos/modelos/:id` | |
+| `GET/POST` | `/catalogos/tipos-uso` | `{ codigo (≤5), descripcion }` |
+| `PUT/DELETE` | `/catalogos/tipos-uso/:id` | |
+| `GET/POST` | `/catalogos/medidas/:tipo` | `:tipo` = `anchos` \| `altos` \| `aros` · `{ valor }` |
+| `POST` | `/catalogos/medidas/:tipo/lote` | `{ valores: [185, 195] }` → `{ creados, existentes, invalidos }` |
+| `PUT/DELETE` | `/catalogos/medidas/:tipo/:id` | `{ valor?, activo? }` |
+| `GET/POST` | `/catalogos/especificaciones` | `?idTipoProducto=` · multipart: `nombre, idsTipoProducto ([1,5]), icono (file) \| iconoUrl` |
+| `PUT/DELETE` | `/catalogos/especificaciones/:id` | |
+| `GET` | `/catalogos/metodos-pago` | Métodos de pago activos (checkout) |
+
+### Productos (Admin) — `/admin/productos` 👑
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/admin/productos` | `?page=&limit=&search=&idTipoProducto=&estado=todos\|activos\|inactivos` (search acepta "225/75R15") |
+| `GET` | `/admin/productos/:id` | Detalle con el contrato del card (incluye inactivos) |
+| `POST` | `/admin/productos` | Crear. Multipart: `datos` (JSON) + `imagenes` (máx 5). También acepta JSON sin fotos |
+| `PUT` | `/admin/productos/:id` | Editar. En `datos`: `imagenesConservar: [ids]`, `principalExistente` o `principalNueva` |
+| `PATCH` | `/admin/productos/:id/estado` | `{ activo: true\|false }` |
+| `DELETE` | `/admin/productos/:id` | Borrado lógico (activo = false) |
+| `PATCH` | `/admin/productos/:id/stock` | `{ stock }` (≥ 0) |
+
+`datos`: `{ idTipoProducto, idMarca, idModelo?, idAncho?, idAlto?, idAro?, nombre, descripcion?, precio, precioAnterior?, stock, especificaciones: [{ idEspecificacion, valor }], esNuevo, enOferta, envioGratis, aplicaDevoluciones, aplicaGarantia, destacado, activo, principalNueva? }`
+
+Errores de validación → `400 { success: false, message, errors: ["…", "…"] }`.
+
+### Catálogo público — `/productos` 🌍
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/productos` | `?idTipoProducto=&idMarca=&destacado=&limit=&offset=` (disponibles primero) |
+| `GET` | `/productos/:id` | Detalle (solo activos) |
+| `GET` | `/productos/buscar-medida` | `?ancho=&alto=&aro=` (acepta `perfil`/`rin`) |
+| `GET` | `/productos/buscar-vehiculo` | `?marca=&modelo=&anio=` |
+| `GET` | `/productos/buscar-general` | `?q=225/75R15` o texto → `{ resultados, recomendaciones, tipo, parsedMedida }` |
+| `GET` | `/productos/recomendaciones` | `?aro=&excluir=1,2` |
+
+**Contrato del card:** `{ idProducto, nombre, descripcion, tipoProducto, marca { nombre, logoUrl, bannerUrl }, modelo { nombre, tipoUso } | null, medidas { ancho, alto, aro, texto: "225/75R15" } | null, precio, precioAnterior, descuentoPorcentaje, stock, disponible, especificaciones [{ nombre, iconoUrl, valor }], imagenes [{ urlImagen, esPrincipal, orden }], imagenPrincipal, esNuevo, enOferta, envioGratis, aplicaDevoluciones, aplicaGarantia }`
+
+### Compatibilidad — `/compatibilidad`
+`GET /vehiculo?idModelo=&anio=` 🌍 · `GET /producto/:id` 🌍 · `POST/PUT/DELETE` 👑 con `{ idProducto, idModelo, anioDesde, anioHasta?, esOriginal? }`
 
 ---
 
@@ -692,22 +753,144 @@ Estadísticas de carritos actuales.
 
 ---
 
-## 📊 Resumen de Endpoints
+---
 
-| Módulo | Total | Públicos 🌍 | Autenticados 🔒 | Admin 👑 |
-|--------|-------|------------|----------------|---------|
-| Clientes | 5 | 2 | 3 | 0 |
-| Llantas | 8 | 4 | 0 | 4 |
-| Vehículos | 3 | 3 | 0 | 0 |
-| Catálogos | 22 | 7 | 0 | 15 |
-| Compatibilidad | 6 | 3 | 0 | 3 |
-| Carrito | 5 | 0 | 5* | 0 |
-| Pedidos | 4 | 0 | 4 | 0 |
-| Direcciones | 4 | 0 | 4 | 0 |
-| Admin | 14 | 0 | 0 | 14 |
-| **Total** | **71** | **19** | **16** | **36** |
+## 🖼️ Admin — Imágenes Cloudinary — `/api/v1/admin`
 
-> *El carrito acepta autenticación opcional (también funciona sin token como sesión anónima)
+> Gestión de imágenes para productos/llantas en Cloudinary. El listado es público y las operaciones de subida, marcado y eliminación requieren token de Administrador.
+
+### GET /productos/:id/imagenes
+Obtener todas las imágenes asociadas a un producto/llanta.
+- **Auth:** 🌍 Público
+- **URL Params:** `id` (number) - ID del producto/llanta
+
+**Respuesta 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "idProducto": 5,
+      "url": "https://res.cloudinary.com/ectyre/image/upload/v1/llantas/abc.jpg",
+      "esPrincipal": true
+    }
+  ]
+}
+```
+
+### POST /productos/:id/imagenes
+Subir una imagen individual para un producto/llanta.
+- **Auth:** 👑 Admin
+- **URL Params:** `id` (number) - ID del producto/llanta
+- **Content-Type:** `multipart/form-data`
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `imagen` | File | Sí | Archivo de imagen (.jpg, .png, .webp) |
+| `tipoImagen` | Text | No | `PRINCIPAL`, `LATERAL`, `DETALLE` |
+
+### POST /productos/:id/imagenes/multiple
+Subir múltiples imágenes simultáneas para un producto/llanta (máximo 5).
+- **Auth:** 👑 Admin
+- **URL Params:** `id` (number) - ID del producto/llanta
+- **Content-Type:** `multipart/form-data`
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `imagenes` | File[] | Sí | Hasta 5 archivos de imagen |
+
+### PATCH /productos/:id/imagenes/:idImagen/principal
+Establecer una imagen como la principal del producto.
+- **Auth:** 👑 Admin
+- **URL Params:** `id` (number), `idImagen` (number)
+
+### DELETE /imagenes/:idImagen
+Eliminar una imagen de la base de datos y de Cloudinary.
+- **Auth:** 👑 Admin
+- **URL Params:** `idImagen` (number)
+
+---
+
+## 🏷️ Promociones — `/api/v1/admin/promociones`
+
+> Gestión de banners y promociones. El listado y consulta individual son de acceso público para mostrar en el home/banners del cliente.
+
+### GET /
+Listar todas las promociones activas.
+- **Auth:** 🌍 Público
+
+**Respuesta 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Promo Invierno 2026",
+      "imagenUrl": "https://res.cloudinary.com/ectyre/image/upload/v1/promociones/promo1.jpg",
+      "activo": true,
+      "idLlanta": 3
+    }
+  ]
+}
+```
+
+### GET /:id
+Obtener detalle de una promoción específica.
+- **Auth:** 🌍 Público
+- **URL Params:** `id` (number)
+
+### POST /
+Crear una nueva promoción publicitaria con subida de imagen.
+- **Auth:** 👑 Admin
+- **Content-Type:** `multipart/form-data`
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `imagen` | File | Sí | Archivo de banner (.jpg, .png, .webp) |
+| `nombre` | Text | Sí | Título o nombre de la promoción |
+| `activo` | Boolean | No | `true` o `false` (default: true) |
+| `idLlanta` | Number | No | ID de la llanta asociada si aplica |
+
+### PUT /:id
+Actualizar datos o imagen de una promoción existente.
+- **Auth:** 👑 Admin
+- **URL Params:** `id` (number)
+- **Content-Type:** `multipart/form-data` o `application/json`
+
+### DELETE /:id
+Eliminar una promoción publicitaria.
+- **Auth:** 👑 Admin
+- **URL Params:** `id` (number)
+
+### PATCH /:id/toggle
+Alternar rápidamente el estado activo/inactivo de una promoción.
+- **Auth:** 👑 Admin
+- **URL Params:** `id` (number)
+
+---
+
+## 📊 Resumen de Endpoints (86 en total)
+
+| Módulo | Total | Públicos 🌍 | Auth Opcional 🌍/🔒 | JWT 🔒 | Admin 👑 |
+|---|---|---|---|---|---|
+| Health Check | 2 | 2 | 0 | 0 | 0 |
+| Auth Google | 3 | 3 | 0 | 0 | 0 |
+| Clientes | 5 | 2 | 0 | 3 | 0 |
+| Llantas | 9 | 6 | 0 | 0 | 3 |
+| Vehículos | 3 | 3 | 0 | 0 | 0 |
+| Carrito | 5 | 0 | 5* | 0 | 0 |
+| Pedidos | 4 | 0 | 0 | 4 | 0 |
+| Direcciones | 4 | 0 | 0 | 4 | 0 |
+| Admin — General | 12 | 0 | 0 | 0 | 12 |
+| Admin — Imágenes | 5 | 1 | 0 | 0 | 4 |
+| Catálogos | 22 | 8 | 0 | 0 | 14 |
+| Compatibilidad | 6 | 3 | 0 | 0 | 3 |
+| Promociones | 6 | 2 | 0 | 0 | 4 |
+| **Total** | **86** | **30** | **5** | **11** | **40** |
+
+> *El carrito acepta autenticación opcional (sesión anónima o JWT)
 
 ---
 
@@ -729,4 +912,4 @@ Estadísticas de carritos actuales.
 
 ---
 
-Ectyre API v1.0.2 · Última actualización: 2026-05-30
+Ectyre API v1.1.0 · Última actualización: 2026-06-25 · 86 endpoints verificados

@@ -5,41 +5,18 @@ const {
   Carrito,
   ItemCarrito,
   Producto,
-  Llanta,
-  MarcaLlanta,
-  ImagenProducto,
   Direccion,
   MetodoPago,
 } = require("../models");
 const { sequelize } = require("../models");
+const { includeProductoResumen } = require("../utils/productoHelpers");
 
 const detalleInclude = [
   {
     model: Producto,
     as: "producto",
-    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo"],
-    include: [
-      {
-        model: Llanta,
-        as: "llanta",
-        attributes: ["idLlanta", "ancho", "perfil", "rin"],
-        include: [
-          {
-            model: MarcaLlanta,
-            as: "marca",
-            attributes: ["idMarca", "nombre", "logoUrl"],
-          },
-        ],
-      },
-      {
-        model: ImagenProducto,
-        as: "imagenes",
-        where: { tipoImagen: "PRINCIPAL" },
-        required: false,
-        attributes: ["urlImagen"],
-        limit: 1,
-      },
-    ],
+    attributes: ["idProducto", "nombre", "precio", "precioAnterior", "stock", "activo"],
+    include: includeProductoResumen(),
   },
 ];
 
@@ -81,7 +58,7 @@ class PedidoService {
               {
                 model: Producto,
                 as: "producto",
-                attributes: ["idProducto", "precio", "stock", "activo"],
+                attributes: ["idProducto", "nombre", "precio", "stock", "activo"],
               },
             ],
           },

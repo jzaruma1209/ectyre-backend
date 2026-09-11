@@ -1,36 +1,13 @@
-const {
-  Carrito,
-  ItemCarrito,
-  Producto,
-  ImagenProducto,
-  Llanta,
-  MarcaLlanta,
-} = require("../models");
+const { Carrito, ItemCarrito, Producto } = require("../models");
 const { NotFoundError, ValidationError } = require("../utils/customErrors");
-const { Op } = require("sequelize");
+const { includeProductoResumen } = require("../utils/productoHelpers");
 
 const itemInclude = [
   {
     model: Producto,
     as: "producto",
-    attributes: ["idProducto", "nombre", "precio", "precioOferta", "stock", "activo"],
-    include: [
-      {
-        model: ImagenProducto,
-        as: "imagenes",
-        where: { tipoImagen: "PRINCIPAL" },
-        required: false,
-        attributes: ["idImagen", "urlImagen"],
-      },
-      {
-        model: Llanta,
-        as: "llanta",
-        attributes: ["idLlanta", "ancho", "perfil", "rin"],
-        include: [
-          { model: MarcaLlanta, as: "marca", attributes: ["idMarca", "nombre", "logoUrl"] },
-        ],
-      },
-    ],
+    attributes: ["idProducto", "nombre", "precio", "precioAnterior", "stock", "activo"],
+    include: includeProductoResumen(),
   },
 ];
 
@@ -109,7 +86,8 @@ class CarritoService {
       }
       await item.update({ cantidad: nuevaCantidad });
     } else {
-      const precio = producto.precioOferta || producto.precio;
+      // `precio` es el precio de venta actual (el precio anterior solo se muestra tachado)
+      const precio = producto.precio;
       item = await ItemCarrito.create({
         idCarrito: carritoId,
         idProducto,

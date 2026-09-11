@@ -14,28 +14,33 @@ const adminRouter = require("./admin.router");
 const vehiculoRouter = require("./vehiculo.router");
 const imagenRouter = require("./imagen.router");
 const catalogoRouter = require("./catalogo.router");
+const productoRouter = require("./producto.router");
+const productoAdminRouter = require("./productoAdmin.router");
 const compatibilidadRouter = require("./compatibilidad.router");
 
 router.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Bienvenido a API Ectyre v1",
-    endpoints: ["/auth", "/llantas", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/catalogos", "/compatibilidad", "/admin", "/admin/promociones"]
+    endpoints: ["/auth", "/productos", "/clientes", "/carrito", "/pedidos", "/direcciones", "/vehiculos", "/catalogos", "/compatibilidad", "/admin", "/admin/productos", "/admin/promociones"]
   });
 });
 
 // Configurar rutas
 router.use("/auth", routerAuth);          // 🔑 Google OAuth
-router.use("/llantas", llantaRouter);
+router.use("/llantas", llantaRouter);     // ⚠️ Deprecado: alias de lectura de /productos
 router.use("/clientes", clienteRouter);
 router.use("/carrito", carritoRouter);
 router.use("/pedidos", pedidoRouter);
 router.use("/direcciones", direccionRouter);
 router.use("/admin", adminRouter);
+router.use("/admin/productos", productoAdminRouter); // 📦 Crear / editar productos (reglas de negocio)
 router.use("/admin", imagenRouter);   // 🖼️ Imágenes Cloudinary
 router.use("/vehiculos", vehiculoRouter);
-router.use("/catalogos", catalogoRouter);          // 📋 Catálogos de llantas
+router.use("/catalogos", catalogoRouter);          // 📋 Niveles de inventario (tipos, marcas, modelos, medidas, especificaciones)
+router.use("/productos", productoRouter);         // 📦 Catálogo público de productos
 router.use("/compatibilidad", compatibilidadRouter); // 🔗 Compatibilidad llanta-vehículo
 router.use("/admin/promociones", require("./promocion.router")); // 🖼️ Imágenes de promoción
+router.use("/admin/media", require("./media.router")); // 📁 Biblioteca de medios (Cloudinary)
 
 module.exports = router;

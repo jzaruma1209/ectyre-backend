@@ -19,7 +19,9 @@ const getCarrito = catchError(async (req, res) => {
 // Agregar item al carrito
 const agregarItem = catchError(async (req, res) => {
   const idCliente = req.user?.idCliente || req.body.idCliente;
-  const sesionId = req.body.sesionId;
+  // El frontend envía sesionId como query param (igual que en el resto de
+  // rutas del carrito); se acepta también por body para compatibilidad.
+  const sesionId = req.query.sesionId || req.body.sesionId;
   const { idProducto, cantidad } = req.body;
 
   const carritoExistente = await carritoService.getOrCreateCarrito(

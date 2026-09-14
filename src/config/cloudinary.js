@@ -4,22 +4,25 @@ const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
 
-// ─── Validar credenciales de Cloudinary ───────────────────────────────
-if (
-  !process.env.CLOUDINARY_CLOUD_NAME ||
-  !process.env.CLOUDINARY_API_KEY ||
-  !process.env.CLOUDINARY_API_SECRET
-) {
-  console.error("Faltan credenciales de Cloudinary en las variables de entorno.");
-}
-
 // ─── Configurar Cloudinary con las credenciales del .env ──────────────
-cloudinary.config({
+// Solo se sobreescriben las claves definidas: si CLOUDINARY_CLOUD_NAME,
+// CLOUDINARY_API_KEY o CLOUDINARY_API_SECRET no existen, se conserva lo que
+// el SDK ya haya auto-detectado desde CLOUDINARY_URL (evita pisarlo con undefined).
+const credencialesEnv = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true, // Forzar uso de HTTPS
+};
+Object.keys(credencialesEnv).forEach((clave) => {
+  if (credencialesEnv[clave] === undefined) delete credencialesEnv[clave];
 });
+cloudinary.config({ ...credencialesEnv, secure: true });
+
+// ─── Validar credenciales de Cloudinary (tras auto-detección de CLOUDINARY_URL) ──
+const configuracionActual = cloudinary.config();
+if (!configuracionActual.cloud_name || !configuracionActual.api_key || !configuracionActual.api_secret) {
+  console.error("Faltan credenciales de Cloudinary en las variables de entorno.");
+}
 
 // ─── Storage: sube directamente a Cloudinary sin pasar por disco ──────
 const storageLlantas = new CloudinaryStorage({

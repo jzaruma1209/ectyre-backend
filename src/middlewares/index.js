@@ -15,6 +15,7 @@ const {
   rateLimitStrict,
   rateLimitRegistro,
 } = require("./rateLimit.middleware");
+const { cachePublica } = require("./cache.middleware");
 
 module.exports = {
   // Autenticación
@@ -35,4 +36,7 @@ module.exports = {
   rateLimitLogin,
   rateLimitStrict,
   rateLimitRegistro,
+
+  // Caché
+  cachePublica,
 };

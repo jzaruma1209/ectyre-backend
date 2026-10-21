@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { cachePublica } = require("../middlewares");
 
 // ─── Google OAuth 2.0 ─────────────────────────────────────────────────
 const routerAuth = require("./auth.router");
@@ -38,9 +39,9 @@ router.use("/admin/productos", productoAdminRouter); // 📦 Crear / editar prod
 router.use("/admin", imagenRouter);   // 🖼️ Imágenes Cloudinary
 router.use("/vehiculos", vehiculoRouter);
 router.use("/catalogos", catalogoRouter);          // 📋 Niveles de inventario (tipos, marcas, modelos, medidas, especificaciones)
-router.use("/productos", productoRouter);         // 📦 Catálogo público de productos
+router.use("/productos", cachePublica(), productoRouter); // 📦 Catálogo público de productos (caché CDN 60 s)
 router.use("/compatibilidad", compatibilidadRouter); // 🔗 Compatibilidad llanta-vehículo
-router.use("/promociones", require("./promocion.public.router")); // 🌍 Catálogo público de promociones (solo activas)
+router.use("/promociones", cachePublica(), require("./promocion.public.router")); // 🌍 Catálogo público de promociones (solo activas, caché CDN 60 s)
 router.use("/admin/promociones", require("./promocion.router")); // 🔒 CRUD de promociones (panel admin)
 router.use("/admin/media", require("./media.router")); // 📁 Biblioteca de medios (Cloudinary)
 

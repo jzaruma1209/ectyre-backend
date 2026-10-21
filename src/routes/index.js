@@ -44,5 +44,6 @@ router.use("/compatibilidad", compatibilidadRouter); // 🔗 Compatibilidad llan
 router.use("/promociones", cachePublica(), require("./promocion.public.router")); // 🌍 Catálogo público de promociones (solo activas, caché CDN 60 s)
 router.use("/admin/promociones", require("./promocion.router")); // 🔒 CRUD de promociones (panel admin)
 router.use("/admin/media", require("./media.router")); // 📁 Biblioteca de medios (Cloudinary)
+router.use("/seo", require("./seo.router")); // 🔎 Sitemap para Google
 
 module.exports = router;
